@@ -46,11 +46,21 @@ const DEFAULT_ACTIONS = [
 ];
 
 export const ActionGrid = ({ platform = "MediaTek", actions, title }) => {
-  const { runAction, activeAction, status, device } = useApp();
+  const { runAction, activeAction, status, device, setImeiModalOpen } = useApp();
   const platformOk = !device || device.platform === platform || platform === "ALL";
   const list = actions && actions.length ? actions : DEFAULT_ACTIONS;
   const disabled = status !== "connected" || !platformOk;
   const cols = list.length > 4 ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-4" : "grid-cols-2";
+
+  const handleAction = (a) => {
+    // IMEI repair needs user input — open the dedicated modal instead of
+    // firing the action immediately.
+    if (a.key === "repair_imei") {
+      setImeiModalOpen(true);
+      return;
+    }
+    runAction(a.key, a.label);
+  };
 
   return (
     <div
@@ -82,7 +92,7 @@ export const ActionGrid = ({ platform = "MediaTek", actions, title }) => {
               key={a.key}
               data-testid={a.testid}
               disabled={isDisabled}
-              onClick={() => runAction(a.key, a.label)}
+              onClick={() => handleAction(a)}
               className={`group relative bg-[#09090B] p-4 flex flex-col items-start gap-2 transition-colors min-h-[110px] text-left ${
                 isDisabled
                   ? "opacity-40 cursor-not-allowed"

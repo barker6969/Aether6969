@@ -10,7 +10,7 @@
 // GetDesktopHeroCard) import these to construct GitHub Release URLs.
 
 export const DESKTOP_VERSION = "0.1.0";
-export const CLI_VERSION = "0.1.0";
+export const CLI_VERSION = "0.2.0";
 
 export const DESKTOP_RELEASES_BASE =
   process.env.REACT_APP_GITHUB_RELEASES_URL ||

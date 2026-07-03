@@ -11,13 +11,13 @@ export const useApp = () => useContext(AppContext);
 // back to the deterministic demo simulation in mockData.js.
 const BRIDGE_METHODS = {
   bypass_frp:             { method: "mtk.frp_bypass" },
+  repair_imei:            { method: "mtk.repair_imei" },
   unlock_bootloader:      { method: "mtk.unlock_bootloader" },
   erase_userdata:         { method: "mtk.erase_userdata" },
   read_info:              { method: "mtk.read_info" },
   samsung_detect:         { method: "samsung.detect" },
   samsung_read_pit:       { method: "samsung.read_pit" },
   samsung_factory_reset:  { method: "samsung.factory_reset" },
-  // repair_imei requires user input (an IMEI); handled separately by a future modal.
 };
 
 const formatTime = (d = new Date()) =>
@@ -36,6 +36,7 @@ export const AppProvider = ({ children }) => {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [credits, setCredits] = useState(100);
   const [setupOpen, setSetupOpen] = useState(false);
+  const [imeiModalOpen, setImeiModalOpen] = useState(false);
   const timersRef = useRef([]);
   const cliBridge = useCliBridge();
 
@@ -96,7 +97,7 @@ export const AppProvider = ({ children }) => {
   }, [pushLog]);
 
   const runAction = useCallback(
-    (actionKey, label) => {
+    (actionKey, label, params = {}) => {
       if (status !== "connected" || activeAction) return;
 
       // PATH A — bridge is live AND we have a real method for this action.
@@ -114,7 +115,7 @@ export const AppProvider = ({ children }) => {
         pushLog("INFO", `aether-cli → ${bridgeMap.method}`);
 
         cliBridge
-          .runJob(bridgeMap.method, bridgeMap.params || {}, (ev) => {
+          .runJob(bridgeMap.method, { ...(bridgeMap.params || {}), ...params }, (ev) => {
             if (ev.stream === "stdout" && ev.line) {
               pushLog("INFO", ev.line);
             } else if (ev.stream === "stderr" && ev.line) {
@@ -146,6 +147,11 @@ export const AppProvider = ({ children }) => {
       // mockData template so the dashboard still feels alive for prospects.
       const template = ACTION_LOG_TEMPLATES[actionKey];
       if (!template) return;
+      // When the caller supplies IMEI values (IMEI Repair modal), reflect them
+      // in the simulated log lines instead of the device's random IMEI.
+      const fillDevice = params?.imei1
+        ? { ...(device || {}), imei: params.imei1, imei2: params.imei2 || device?.imei2 }
+        : device;
       setActiveAction(label);
       setStatus("working");
       setProgress(0);
@@ -154,7 +160,7 @@ export const AppProvider = ({ children }) => {
       template.forEach((step, idx) => {
         const t = setTimeout(
           () => {
-            pushLog(step.level, fillTemplate(step.text, device));
+            pushLog(step.level, fillTemplate(step.text, fillDevice));
             setProgress(Math.round(((idx + 1) / template.length) * 100));
             if (idx === template.length - 1) {
               const finishT = setTimeout(() => {
@@ -219,6 +225,8 @@ export const AppProvider = ({ children }) => {
     cliBridge,
     setupOpen,
     setSetupOpen,
+    imeiModalOpen,
+    setImeiModalOpen,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

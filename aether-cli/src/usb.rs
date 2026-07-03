@@ -1,15 +1,52 @@
 //! USB enumeration + hot-plug watching via `rusb`.
 //!
-//! This module is real and functional — it actually talks to libusb on the host.
+//! Real and functional — talks to libusb on the host. On machines without a
+//! USB subsystem (Docker containers, headless CI) `libusb_init` fails; instead
+//! of panicking or bubbling an error, we degrade gracefully to an empty device
+//! list so `aether-cli devices` / the bridge stay usable everywhere.
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use colored::Colorize;
-use rusb::{Device, DeviceDescriptor, GlobalContext};
+use rusb::{Context, Device, DeviceDescriptor, UsbContext};
 use serde_json::{json, Value};
 use std::time::Duration;
 
+/// Create a libusb context, returning `None` when no USB subsystem is available
+/// (Docker/headless CI). Never panics.
+fn usb_context() -> Option<Context> {
+    match Context::new() {
+        Ok(ctx) => Some(ctx),
+        Err(e) => {
+            tracing::debug!("libusb unavailable ({e}) — USB features disabled on this host");
+            None
+        }
+    }
+}
+
+/// Enumerate attached USB devices as (device, descriptor) pairs. Returns an
+/// empty vec on hosts without USB — never panics, never errors.
+fn enumerate() -> Vec<(Device<Context>, DeviceDescriptor)> {
+    let Some(ctx) = usb_context() else {
+        return Vec::new();
+    };
+    let list = match ctx.devices() {
+        Ok(l) => l,
+        Err(e) => {
+            tracing::debug!("libusb device enumeration failed: {e}");
+            return Vec::new();
+        }
+    };
+    let mut out = Vec::new();
+    for d in list.iter() {
+        if let Ok(desc) = d.device_descriptor() {
+            out.push((d, desc));
+        }
+    }
+    out
+}
+
 /// Pretty-print a single USB device row.
-fn fmt_device(d: &Device<GlobalContext>, desc: &DeviceDescriptor) -> String {
+fn fmt_device<T: UsbContext>(d: &Device<T>, desc: &DeviceDescriptor) -> String {
     let vid = desc.vendor_id();
     let pid = desc.product_id();
     let bus = d.bus_number();
@@ -51,11 +88,7 @@ fn classify(desc: &DeviceDescriptor) -> Option<&'static str> {
 /// JSON representation of the current USB device list — used by the bridge.
 pub fn devices_as_json() -> Result<Vec<Value>> {
     let mut out = Vec::new();
-    for d in rusb::devices()?.iter() {
-        let desc = match d.device_descriptor() {
-            Ok(x) => x,
-            Err(_) => continue,
-        };
+    for (d, desc) in enumerate() {
         out.push(json!({
             "bus": d.bus_number(),
             "addr": d.address(),
@@ -68,17 +101,13 @@ pub fn devices_as_json() -> Result<Vec<Value>> {
 }
 
 pub fn list_devices() -> Result<()> {
-    let devices = rusb::devices().context("failed to enumerate USB devices")?;
+    let devices = enumerate();
     let mut shown = 0;
     let mut repair_targets = 0;
-    for d in devices.iter() {
-        let desc = match d.device_descriptor() {
-            Ok(x) => x,
-            Err(_) => continue,
-        };
+    for (d, desc) in &devices {
         shown += 1;
-        let line = fmt_device(&d, &desc);
-        if let Some(tag) = classify(&desc) {
+        let line = fmt_device(d, desc);
+        if let Some(tag) = classify(desc) {
             repair_targets += 1;
             println!("{}", format!("{}  ← {}", line, tag).bright_green().bold());
         } else {
@@ -92,11 +121,17 @@ pub fn list_devices() -> Result<()> {
         shown,
         repair_targets,
     );
-    if repair_targets == 0 {
+    if shown == 0 {
         println!(
             "  {}",
-            "Plug in a device in BROM / EDL / DFU / Download mode and retry."
+            "No USB subsystem detected (or no devices attached). On a real \
+             technician machine, plug in a device in BROM / EDL / DFU / Download mode."
                 .dimmed()
+        );
+    } else if repair_targets == 0 {
+        println!(
+            "  {}",
+            "Plug in a device in BROM / EDL / DFU / Download mode and retry.".dimmed()
         );
     }
     Ok(())
@@ -107,10 +142,10 @@ pub async fn watch_hotplug() -> Result<()> {
         "  {} watching for hot-plug events ... (Ctrl-C to stop)",
         "○".bright_green()
     );
-    let mut last = collect_keys()?;
+    let mut last = collect_keys();
     loop {
         tokio::time::sleep(Duration::from_millis(750)).await;
-        let now = collect_keys()?;
+        let now = collect_keys();
         for k in now.difference(&last) {
             println!("  {} attached  {}", "+".bright_green().bold(), k);
         }
@@ -121,18 +156,16 @@ pub async fn watch_hotplug() -> Result<()> {
     }
 }
 
-fn collect_keys() -> Result<std::collections::HashSet<String>> {
+fn collect_keys() -> std::collections::HashSet<String> {
     let mut out = std::collections::HashSet::new();
-    for d in rusb::devices()?.iter() {
-        if let Ok(desc) = d.device_descriptor() {
-            out.insert(format!(
-                "{:04x}:{:04x} bus{}.addr{}",
-                desc.vendor_id(),
-                desc.product_id(),
-                d.bus_number(),
-                d.address()
-            ));
-        }
+    for (d, desc) in enumerate() {
+        out.insert(format!(
+            "{:04x}:{:04x} bus{}.addr{}",
+            desc.vendor_id(),
+            desc.product_id(),
+            d.bus_number(),
+            d.address()
+        ));
     }
-    Ok(out)
+    out
 }
