@@ -1,6 +1,6 @@
 import React from "react";
 import { useApp } from "../context/AppContext";
-import { Settings as SettingsIcon, ShieldCheck, Bell, Usb, Database, Info } from "lucide-react";
+import { Settings as SettingsIcon, ShieldCheck, Bell, Usb, Database, Info, Wrench, Terminal } from "lucide-react";
 
 const Toggle = ({ checked, onChange, testid }) => (
   <button
@@ -32,7 +32,8 @@ const Setting = ({ icon: Icon, title, desc, control }) => (
 );
 
 export default function Settings() {
-  const { autoConnect, setAutoConnect, soundEnabled, setSoundEnabled } = useApp();
+  const { autoConnect, setAutoConnect, soundEnabled, setSoundEnabled, setSetupOpen, cliBridge } = useApp();
+  const cliConnected = cliBridge?.status === "connected";
 
   return (
     <div data-testid="settings-page" className="h-full flex flex-col gap-3 p-4 overflow-y-auto">
@@ -105,6 +106,43 @@ export default function Settings() {
               >
                 Check
               </button>
+            }
+          />
+        </div>
+
+        <div className="bg-[#09090B] border border-white/10 lg:col-span-2">
+          <div className="px-4 py-3 border-b border-white/10 font-mono text-[10px] tracking-[0.25em] uppercase text-white/50">
+            Environment · Local CLI
+          </div>
+          <Setting
+            icon={Wrench}
+            title="Setup Wizard"
+            desc="Detect & install mtkclient (MediaTek), Heimdall (Samsung) and the Aether CLI bridge."
+            control={
+              <button
+                data-testid="settings-open-setup-wizard"
+                onClick={() => setSetupOpen(true)}
+                className="h-8 px-3 bg-[#00FF41] hover:bg-[#00CC33] text-black font-mono text-[10px] tracking-[0.2em] uppercase font-bold transition-colors"
+              >
+                Run Setup
+              </button>
+            }
+          />
+          <Setting
+            icon={Terminal}
+            title="CLI bridge status"
+            desc="Run `aether-cli serve` on your machine to switch from demo to live device mode."
+            control={
+              <span
+                data-testid="settings-cli-status"
+                className={`font-mono text-[10px] tracking-[0.18em] uppercase px-2.5 py-1 border ${
+                  cliConnected
+                    ? "text-[#00FF41] border-[#00FF41]/40 bg-[#00FF41]/5"
+                    : "text-white/50 border-white/15"
+                }`}
+              >
+                {cliConnected ? "Connected" : "Offline (demo)"}
+              </span>
             }
           />
         </div>

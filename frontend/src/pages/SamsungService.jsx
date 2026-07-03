@@ -22,7 +22,7 @@ const KNOX_LIMITED = [
 ];
 
 export default function SamsungService() {
-  const { device, status, cliBridge, startSearch } = useApp();
+  const { device, status, cliBridge, startSearch, setSetupOpen } = useApp();
   const matches = device && device.platform === "Samsung";
   const heimdallReady = cliBridge?.info?.heimdall;
 
@@ -84,6 +84,13 @@ export default function SamsungService() {
             </a>
             {" "}· macOS: <code className="bg-black/40 px-1">brew install heimdall</code>
             {" "}· Linux: <code className="bg-black/40 px-1">sudo apt install heimdall-flash</code>
+            <button
+              data-testid="samsung-run-setup"
+              onClick={() => setSetupOpen(true)}
+              className="ml-2 underline decoration-dotted text-[#00FF41] hover:text-[#00CC33]"
+            >
+              Run Setup Wizard
+            </button>
           </div>
         </div>
       )}

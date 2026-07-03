@@ -52,6 +52,25 @@ fn find_python() -> Result<String> {
     ))
 }
 
+/// Return the detected Python interpreter version string (e.g. "Python 3.11.4").
+/// Used by the Setup Wizard `setup.doctor` bridge method.
+pub fn check_python() -> Result<String> {
+    let python = find_python()?;
+    let out = std::process::Command::new(&python)
+        .arg("--version")
+        .output()
+        .context("failed to spawn python")?;
+    if !out.status.success() {
+        return Err(anyhow!("python --version failed"));
+    }
+    let mut text = String::from_utf8_lossy(&out.stdout).trim().to_string();
+    if text.is_empty() {
+        // Some older Python builds print the version banner to stderr.
+        text = String::from_utf8_lossy(&out.stderr).trim().to_string();
+    }
+    Ok(text)
+}
+
 /// Verify mtkclient is importable. Returns its installed version string,
 /// e.g. "2.0.2", on success.
 pub fn check_mtkclient() -> Result<String> {
@@ -86,6 +105,43 @@ pub async fn install_mtkclient() -> Result<String> {
         return Err(anyhow!("pip install failed:\n{}", text));
     }
     Ok(text)
+}
+
+/// Stream `python -m pip install --user --upgrade mtkclient` line-by-line so
+/// the Setup Wizard in the dashboard can show live install progress in the
+/// console. Returns the pip exit code (0 = success).
+pub async fn install_mtkclient_streaming(tx: UnboundedSender<StreamLine>) -> Result<i32> {
+    let python = find_python()?;
+    let mut cmd = Command::new(&python);
+    cmd.args(["-m", "pip", "install", "--user", "--upgrade", "mtkclient"]);
+    cmd.stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .stdin(Stdio::null());
+
+    let mut child: Child = cmd.spawn().context("failed to spawn pip")?;
+    let stdout = child.stdout.take().ok_or_else(|| anyhow!("no stdout"))?;
+    let stderr = child.stderr.take().ok_or_else(|| anyhow!("no stderr"))?;
+
+    let tx_out = tx.clone();
+    let stdout_task = tokio::spawn(async move {
+        let mut lines = BufReader::new(stdout).lines();
+        while let Ok(Some(line)) = lines.next_line().await {
+            let _ = tx_out.send(StreamLine { stream: "stdout", line });
+        }
+    });
+    let tx_err = tx.clone();
+    let stderr_task = tokio::spawn(async move {
+        let mut lines = BufReader::new(stderr).lines();
+        while let Ok(Some(line)) = lines.next_line().await {
+            let _ = tx_err.send(StreamLine { stream: "stderr", line });
+        }
+    });
+
+    let status = child.wait().await.context("pip exited abnormally")?;
+    let _ = stdout_task.await;
+    let _ = stderr_task.await;
+    drop(tx);
+    Ok(status.code().unwrap_or(-1))
 }
 
 /// Spawn `python -m mtkclient ARGS...` and stream each stdout/stderr line

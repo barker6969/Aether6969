@@ -1,12 +1,14 @@
 import React from "react";
-import { Minus, Square, X } from "lucide-react";
+import { Minus, Square, X, Wrench } from "lucide-react";
 import { DownloadCliButton } from "./DownloadCliButton";
 import { DownloadDesktopButton } from "./DownloadDesktopButton";
+import { useApp } from "../context/AppContext";
 
 const LOGO_URL =
   "https://static.prod-images.emergentagent.com/jobs/540cc9df-c50a-4a07-a460-6c88ca22b1a7/images/2d4119f8e681e91c440e01928176b55e52818652e44fd72f5f424ba935136d9c.png";
 
 export const WindowChrome = () => {
+  const { setSetupOpen } = useApp();
   return (
     <div
       data-testid="window-chrome"
@@ -27,6 +29,15 @@ export const WindowChrome = () => {
         </span>
       </div>
       <div className="flex items-center gap-3">
+        <button
+          data-testid="window-setup-trigger"
+          onClick={() => setSetupOpen(true)}
+          className="h-7 px-2.5 border border-white/15 hover:border-[#00FF41]/40 hover:text-[#00FF41] text-white/70 font-mono text-[10px] tracking-[0.22em] uppercase flex items-center gap-1.5 transition-colors"
+          title="Environment Setup Wizard — install mtkclient / Heimdall / CLI"
+        >
+          <Wrench className="w-3 h-3" />
+          Setup
+        </button>
         <DownloadDesktopButton variant="compact" />
         <DownloadCliButton variant="compact" />
         <div className="flex items-center gap-1">

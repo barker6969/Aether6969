@@ -35,6 +35,7 @@ export const AppProvider = ({ children }) => {
   const [autoConnect, setAutoConnect] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [credits, setCredits] = useState(100);
+  const [setupOpen, setSetupOpen] = useState(false);
   const timersRef = useRef([]);
   const cliBridge = useCliBridge();
 
@@ -216,6 +217,8 @@ export const AppProvider = ({ children }) => {
     pushLog,
     clearLogs,
     cliBridge,
+    setupOpen,
+    setSetupOpen,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

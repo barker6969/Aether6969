@@ -170,10 +170,17 @@ fn spawn_heimdall_job(args: Vec<String>, write: WsSink) -> String {
     spawn_job(args, write, JobTool::Heimdall)
 }
 
+/// Spawn a `pip install --user --upgrade mtkclient` job (Setup Wizard
+/// auto-install). Streams pip output back as `event` notifications.
+fn spawn_pip_mtkclient_job(write: WsSink) -> String {
+    spawn_job(Vec::new(), write, JobTool::PipMtkclient)
+}
+
 #[derive(Clone, Copy)]
 enum JobTool {
     Mtkclient,
     Heimdall,
+    PipMtkclient,
 }
 
 fn spawn_job(args: Vec<String>, write: WsSink, tool: JobTool) -> String {
@@ -187,6 +194,7 @@ fn spawn_job(args: Vec<String>, write: WsSink, tool: JobTool) -> String {
             match tool {
                 JobTool::Mtkclient => mtkclient::run_mtkclient_streaming(&refs, tx).await,
                 JobTool::Heimdall => heimdall::run_heimdall_streaming(&refs, tx).await,
+                JobTool::PipMtkclient => mtkclient::install_mtkclient_streaming(tx).await,
             }
         });
         while let Some(sl) = rx.recv().await {
@@ -250,7 +258,9 @@ async fn dispatch(method: &str, params: &Value, write: &WsSink) -> Result<Value,
                     "mtk.read_info",
                     "samsung.detect",
                     "samsung.read_pit",
-                    "samsung.factory_reset"
+                    "samsung.factory_reset",
+                    "setup.doctor",
+                    "setup.install_mtkclient"
                 ],
             }))
         }
@@ -312,6 +322,17 @@ async fn dispatch(method: &str, params: &Value, write: &WsSink) -> Result<Value,
                 vec!["erase".into(), "--partition".into(), "USERDATA".into()],
                 write.clone(),
             );
+            Ok(json!({ "job_id": job_id, "status": "started" }))
+        }
+
+        // ─── Setup Wizard ─────────────────────────────────────────────────
+        "setup.doctor" => Ok(json!({
+            "python": mtkclient::check_python().ok(),
+            "mtkclient": mtkclient::check_mtkclient().ok(),
+            "heimdall": heimdall::check_heimdall().ok(),
+        })),
+        "setup.install_mtkclient" => {
+            let job_id = spawn_pip_mtkclient_job(write.clone());
             Ok(json!({ "job_id": job_id, "status": "started" }))
         }
 

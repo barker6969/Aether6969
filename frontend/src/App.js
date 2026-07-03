@@ -7,6 +7,7 @@ import { WindowChrome } from "./components/WindowChrome";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { Footer } from "./components/Footer";
+import { SetupWizard } from "./components/SetupWizard";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import MTKService from "./pages/MTKService";
@@ -52,6 +53,7 @@ function AppShell() {
         </div>
         <StatusBar />
         <Footer />
+        <SetupWizard />
       </div>
     </AppProvider>
   );
