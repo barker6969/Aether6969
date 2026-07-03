@@ -25,6 +25,20 @@ const QC_DEVICES = [
   { model: "SM4450 (Snapdragon 4 Gen 2)", brand: "Motorola Moto G35", android: "14", patch: "2024-10-01" },
 ];
 
+// Samsung devices reachable via Download Mode (Odin/Loke — Heimdall).
+// Model strings intentionally contain the "Galaxy ..." name so the
+// SamsungService known-good chip cloud highlights the connected model.
+const SAMSUNG_DEVICES = [
+  { model: "Galaxy S9 (SM-G960F)",     brand: "Samsung Galaxy S9",     android: "10", patch: "2021-05-01" },
+  { model: "Galaxy Note 9 (SM-N960F)", brand: "Samsung Galaxy Note 9", android: "10", patch: "2021-08-01" },
+  { model: "Galaxy S8 (SM-G950F)",     brand: "Samsung Galaxy S8",     android: "9",  patch: "2020-04-01" },
+  { model: "Galaxy A7 (SM-A750F)",     brand: "Samsung Galaxy A7",     android: "10", patch: "2020-11-01" },
+  { model: "Galaxy J7 (SM-J730F)",     brand: "Samsung Galaxy J7",     android: "9",  patch: "2019-04-01" },
+  { model: "Galaxy Tab S3 (SM-T820)",  brand: "Samsung Galaxy Tab S3", android: "9",  patch: "2019-12-01" },
+  { model: "Galaxy S10 (SM-G973F)",    brand: "Samsung Galaxy S10",    android: "12", patch: "2023-02-01" },
+  { model: "Galaxy A51 (SM-A515F)",    brand: "Samsung Galaxy A51",    android: "13", patch: "2023-08-01" },
+];
+
 const randomHex = (len) =>
   Array.from({ length: len }, () =>
     "0123456789ABCDEF"[Math.floor(Math.random() * 16)]
@@ -40,18 +54,35 @@ const maskIMEI = (imei) => imei.slice(0, 4) + " ****** " + imei.slice(-3);
 
 const randomSerial = () => "R9F" + randomHex(8);
 
-const pickDevicePool = (chipset) => {
-  if (chipset === "MTK") return MTK_DEVICES;
-  if (chipset === "QC") return QC_DEVICES;
-  return Math.random() < 0.5 ? MTK_DEVICES : QC_DEVICES;
+const POOLS = {
+  MTK: { list: MTK_DEVICES, platform: "MediaTek" },
+  QC: { list: QC_DEVICES, platform: "Qualcomm" },
+  SAMSUNG: { list: SAMSUNG_DEVICES, platform: "Samsung" },
+};
+
+// Resolve which device pool to draw from. Accepts an explicit key
+// ("MTK" | "QC" | "SAMSUNG"); anything else (including a click event
+// object accidentally passed as the arg) falls through to a weighted
+// random pick so callers stay safe.
+const pickPool = (chipset) => {
+  if (typeof chipset === "string" && POOLS[chipset]) return POOLS[chipset];
+  const r = Math.random();
+  if (r < 0.4) return POOLS.MTK;
+  if (r < 0.75) return POOLS.QC;
+  return POOLS.SAMSUNG; // Samsung (Download Mode) ~1 in 4 auto scans
+};
+
+const bootloaderFor = (platform) => {
+  if (platform === "MediaTek") return "BROM v" + (5 + Math.floor(Math.random() * 6)) + ".2104";
+  if (platform === "Qualcomm") return "EDL 9008";
+  return "Download Mode (Odin/Loke)"; // Samsung
 };
 
 export const generateDevice = (chipset = "auto") => {
-  const pool = pickDevicePool(chipset);
-  const base = pool[Math.floor(Math.random() * pool.length)];
+  const { list, platform } = pickPool(chipset);
+  const base = list[Math.floor(Math.random() * list.length)];
   const imei = randomIMEI();
   const imei2 = randomIMEI();
-  const platform = MTK_DEVICES.includes(base) ? "MediaTek" : "Qualcomm";
   return {
     ...base,
     platform,
@@ -60,10 +91,10 @@ export const generateDevice = (chipset = "auto") => {
     imei2,
     imei2_masked: maskIMEI(imei2),
     serial: randomSerial(),
-    bootloader: platform === "MediaTek" ? "BROM v" + (5 + Math.floor(Math.random() * 6)) + ".2104" : "EDL 9008",
+    bootloader: bootloaderFor(platform),
     cpuId: randomHex(16),
-    storage: ["128GB UFS 3.1", "256GB UFS 3.1", "512GB UFS 4.0"][Math.floor(Math.random() * 3)],
-    ram: ["6GB", "8GB", "12GB", "16GB"][Math.floor(Math.random() * 4)],
+    storage: ["128GB UFS 3.1", "256GB UFS 3.1", "512GB UFS 4.0", "64GB eMMC 5.1"][Math.floor(Math.random() * 4)],
+    ram: ["4GB", "6GB", "8GB", "12GB", "16GB"][Math.floor(Math.random() * 5)],
     region: ["EU", "GLOBAL", "INDIA", "CN", "MEA"][Math.floor(Math.random() * 5)],
     detectedAt: new Date(),
   };
@@ -111,6 +142,29 @@ export const ACTION_LOG_TEMPLATES = {
     { level: "INFO", text: "CPU ID: {CPUID}" },
     { level: "INFO", text: "Serial: {SERIAL}" },
     { level: "SUCCESS", text: "Device fingerprint captured." },
+  ],
+  // ──────────── SAMSUNG · HEIMDALL (ODIN/LOKE) ────────────
+  samsung_detect: [
+    { level: "INFO", text: "Initializing Loke protocol handshake ..." },
+    { level: "INFO", text: "Waiting for Download Mode device on USB bus ..." },
+    { level: "INFO", text: "Handshake ACK · session opened @ 115200 baud" },
+    { level: "INFO", text: "Reading device header · {MODEL}" },
+    { level: "SUCCESS", text: "Samsung device detected in Download Mode. Ready." },
+  ],
+  samsung_read_pit: [
+    { level: "INFO", text: "Requesting Partition Information Table (PIT) ..." },
+    { level: "INFO", text: "Downloading PIT · {HEX} bytes ..." },
+    { level: "INFO", text: "Parsing 28 partition entries ..." },
+    { level: "INFO", text: "  BOOT · RECOVERY · SYSTEM · USERDATA · METADATA" },
+    { level: "SUCCESS", text: "PIT table dumped → /backup/{SERIAL}_pit.bin" },
+  ],
+  samsung_factory_reset: [
+    { level: "WARN", text: "Destructive op · erasing USERDATA on {MODEL}" },
+    { level: "INFO", text: "Entering Odin flash session ..." },
+    { level: "INFO", text: "Erasing USERDATA partition ..." },
+    { level: "INFO", text: "Erasing CACHE partition ..." },
+    { level: "INFO", text: "Erasing METADATA partition (skipped if absent) ..." },
+    { level: "SUCCESS", text: "Factory reset complete. Device reboots to setup wizard." },
   ],
   // ──────────── EXPANDED EXPLOIT CATALOG ────────────
   read_codes: [

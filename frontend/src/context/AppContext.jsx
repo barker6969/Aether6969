@@ -58,7 +58,9 @@ export const AppProvider = ({ children }) => {
     timersRef.current = [];
   };
 
-  const startSearch = useCallback(() => {
+  const startSearch = useCallback((forceChipset = "auto") => {
+    // Coerce accidental event-object args (onClick={startSearch}) back to auto.
+    const chipset = typeof forceChipset === "string" ? forceChipset : "auto";
     clearTimers();
     setStatus("searching");
     setDevice(null);
@@ -66,10 +68,11 @@ export const AppProvider = ({ children }) => {
     pushLog("INFO", "Aether driver loaded. Scanning USB bus ...");
     pushLog("INFO", "Listening on COM ports: " + COM_PORTS.join(", "));
 
-    const t1 = setTimeout(() => pushLog("INFO", "Probing for MTK preloader signature ..."), 900);
-    const t2 = setTimeout(() => pushLog("INFO", "Probing for Qualcomm EDL 9008 ..."), 1700);
+    const t1 = setTimeout(() => pushLog("INFO", "Probing for MTK preloader signature ..."), 800);
+    const t2 = setTimeout(() => pushLog("INFO", "Probing for Qualcomm EDL 9008 ..."), 1400);
+    const t2b = setTimeout(() => pushLog("INFO", "Probing for Samsung Download Mode (Odin/Loke) ..."), 2000);
     const t3 = setTimeout(() => {
-      const dev = generateDevice("auto");
+      const dev = generateDevice(chipset);
       const port = COM_PORTS[Math.floor(Math.random() * COM_PORTS.length)];
       setDevice(dev);
       setComPort(port);
@@ -78,7 +81,7 @@ export const AppProvider = ({ children }) => {
       pushLog("SUCCESS", `Device detected: ${dev.model}`);
       pushLog("INFO", `Brand: ${dev.brand} | Android ${dev.android} | Patch ${dev.patch}`);
     }, 2800);
-    timersRef.current = [t1, t2, t3];
+    timersRef.current = [t1, t2, t2b, t3];
   }, [pushLog]);
 
   const disconnect = useCallback(() => {

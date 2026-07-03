@@ -3,7 +3,7 @@ import { ActionGrid, SAMSUNG_ACTIONS } from "../components/ActionGrid";
 import { DeviceInfoPanel } from "../components/DeviceInfoPanel";
 import { Console } from "../components/Console";
 import { useApp } from "../context/AppContext";
-import { Smartphone, AlertTriangle, ShieldAlert } from "lucide-react";
+import { Smartphone, AlertTriangle, ShieldAlert, Usb, Loader2 } from "lucide-react";
 
 // Models where Heimdall partition writes still succeed reliably (Knox 2.x
 // and earlier). Newer models may fall through to read-only operations.
@@ -22,8 +22,8 @@ const KNOX_LIMITED = [
 ];
 
 export default function SamsungService() {
-  const { device, status, cliBridge } = useApp();
-  const matches = device && device.brand === "Samsung";
+  const { device, status, cliBridge, startSearch } = useApp();
+  const matches = device && device.platform === "Samsung";
   const heimdallReady = cliBridge?.info?.heimdall;
 
   return (
@@ -47,6 +47,22 @@ export default function SamsungService() {
             {heimdallReady ? "READY" : "NOT INSTALLED"}
           </div>
         </div>
+        {!matches && (
+          <button
+            data-testid="samsung-connect-btn"
+            onClick={() => startSearch("SAMSUNG")}
+            disabled={status === "searching"}
+            className="h-10 px-4 border border-[#1f5fdb]/50 bg-[#1f5fdb]/10 hover:bg-[#1f5fdb]/20 text-[#4d8bff] font-mono text-[11px] tracking-[0.18em] uppercase transition-colors disabled:opacity-40 flex items-center justify-center gap-2 flex-shrink-0"
+            title="Web demo — simulates a Samsung device entering Download Mode."
+          >
+            {status === "searching" ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Usb className="w-3.5 h-3.5" />
+            )}
+            {status === "searching" ? "Scanning…" : "Connect Samsung"}
+          </button>
+        )}
       </div>
 
       {/* Setup banner — only when bridge is live but Heimdall isn't found. */}
