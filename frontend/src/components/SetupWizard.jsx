@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogContent } from "./ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 import { useApp } from "../context/AppContext";
 import { CLI_RELEASES_BASE, CLI_VERSION } from "../lib/releases";
 import {
@@ -221,10 +221,10 @@ export const SetupWizard = () => {
             <Wrench className="w-5 h-5 text-[#00FF41]" strokeWidth={1.8} />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold tracking-tight">Environment Setup Wizard</h2>
-            <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-white/40 mt-1">
+            <DialogTitle className="text-lg font-bold tracking-tight text-white">Environment Setup Wizard</DialogTitle>
+            <DialogDescription className="font-mono text-[10px] tracking-[0.18em] uppercase text-white/40 mt-1">
               Get your machine ready for real device repair
-            </p>
+            </DialogDescription>
           </div>
           <span
             data-testid="setup-overall-status"

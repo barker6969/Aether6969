@@ -1,5 +1,27 @@
 # Aether — Changelog
 
+## 2026-07-03 · Samsung Service made demo-functional + Environment Setup Wizard (P1)
+
+### Samsung Service — fixed dead demo path
+Verification of the Heimdall/Samsung integration surfaced that the Samsung page was **non-functional in demo mode** (the only mode available without USB): the mock cycler never produced a Samsung-platform device, so the action grid was permanently disabled ("⚠ Wrong platform"), and 3 of 4 Samsung actions had no demo log template.
+- **`frontend/src/lib/mockData.js`** — Added `SAMSUNG_DEVICES` pool (Galaxy S9/Note 9/S8/A7/J7/Tab S3/S10/A51, `platform: "Samsung"`, bootloader `Download Mode (Odin/Loke)`). Refactored `generateDevice(chipset)` around a `POOLS` map + `pickPool()` (auto weighting ~40% MTK / 35% QC / 25% Samsung), safe against event-object args. Added demo templates `samsung_detect`, `samsung_read_pit`, `samsung_factory_reset`.
+- **`frontend/src/context/AppContext.jsx`** — `startSearch(forceChipset='auto')` now accepts an explicit pool key (coerces stray event objects → 'auto') + added a Samsung Odin probe log line.
+- **`frontend/src/pages/SamsungService.jsx`** — Fixed broken `matches` check (`device.brand === "Samsung"`, which never matched, → `device.platform === "Samsung"`). Added a deterministic **Connect Samsung (Download Mode)** button (`data-testid="samsung-connect-btn"`) that forces a simulated Galaxy device.
+- Verified: `testing_agent` iteration_6.json — 12/12 pass, no regressions.
+
+### Environment Setup Wizard (P1)
+Detects & guides installation of the local dependencies so users can move from demo → live device repair.
+- **`frontend/src/components/SetupWizard.jsx` (NEW)** — Radix Dialog. Three dependency cards (Aether CLI bridge, mtkclient/MediaTek, Heimdall/Samsung) with live status pills (READY/NOT FOUND/UNKNOWN) read from `cliBridge.info` (the `hello` handshake already returns mtkclient/heimdall versions). OS switcher (Windows/macOS/Linux) swaps copy-paste install commands. **Re-check** button calls JSON-RPC `setup.doctor`; **Auto-install via CLI** button (mtkclient) streams `setup.install_mtkclient` pip output to the console — both only enabled when the CLI bridge is connected. Auto-opens once when a *live* CLI reports a missing dep (never fires in the web demo). A11y: uses `DialogTitle`/`DialogDescription`.
+- **`frontend/src/context/AppContext.jsx`** — added `setupOpen`/`setSetupOpen` state.
+- **`frontend/src/App.js`** — mounts `<SetupWizard/>` in `AppShell`.
+- **`frontend/src/components/WindowChrome.jsx`** — added **Setup** button (`data-testid="window-setup-trigger"`).
+- **`frontend/src/pages/Settings.jsx`** — new "Environment · Local CLI" card (`settings-open-setup-wizard` + `settings-cli-status`).
+- **`frontend/src/pages/SamsungService.jsx`** — Heimdall-missing banner now links to the wizard (`samsung-run-setup`).
+- **Rust CLI**: `mtkclient.rs` — added `check_python()` + `install_mtkclient_streaming()`; `bridge.rs` — new `JobTool::PipMtkclient`, methods `setup.doctor` + `setup.install_mtkclient`, added to `hello` capabilities. `cargo check --release` clean (no warnings). Ships in the next CLI release (v0.2.0); frontend degrades gracefully on older CLIs.
+- Verified: `testing_agent` iteration_7.json — 12/12 pass. Fixed the one flagged Radix DialogTitle a11y warning (confirmed gone).
+
+---
+
 ## 2026-02-23 · Desktop CI green + Tauri wrapper shipped
 
 ### Path A — Real device repair via mtkclient subprocess wrapper (Feb 23, evening)
