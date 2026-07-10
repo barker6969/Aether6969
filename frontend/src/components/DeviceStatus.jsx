@@ -3,10 +3,11 @@ import { useApp } from "../context/AppContext";
 import { Usb, Loader2, CheckCircle2, PowerOff, Activity } from "lucide-react";
 
 export const DeviceStatus = () => {
-  const { status, device, comPort, startSearch, disconnect, activeAction, progress } = useApp();
+  const { status, device, comPort, startSearch, disconnect, connectWebUsb, webusb, activeAction, progress } = useApp();
 
   const isSearching = status === "searching";
   const isConnected = status === "connected" || status === "working";
+  const webusbSupported = !!webusb?.supported;
 
   return (
     <div
@@ -44,6 +45,7 @@ export const DeviceStatus = () => {
             </div>
             <p className="text-sm text-white/50 max-w-md">
               Connect target device via USB. Hold Vol- + plug-in for MTK BROM, or Vol+ Vol- for Qualcomm EDL.
+              Use <span className="text-[#4d8bff]">WebUSB</span> (Chrome/Edge) to detect a real device in-browser, or run the demo scan.
             </p>
           </div>
         )}
@@ -107,16 +109,32 @@ export const DeviceStatus = () => {
       {/* Action buttons */}
       <div className="flex items-center gap-2 relative z-10">
         {!isConnected ? (
-          <button
-            data-testid="btn-start-scan"
-            onClick={startSearch}
-            disabled={isSearching}
-            title="Web demo — animated scan only. Install the Aether CLI for real device detection."
-            className="flex-1 h-10 border border-[#00FF41]/40 bg-[#00FF41]/5 hover:bg-[#00FF41]/15 text-[#00FF41] font-mono text-xs tracking-[0.2em] uppercase transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
-          >
-            <Usb className="w-3.5 h-3.5" />
-            {isSearching ? "Scanning..." : "Start Scan (demo)"}
-          </button>
+          <>
+            <button
+              data-testid="btn-start-scan"
+              onClick={startSearch}
+              disabled={isSearching}
+              title="Web demo — animated scan only. Install the Aether CLI for real device detection."
+              className="flex-1 h-10 border border-[#00FF41]/40 bg-[#00FF41]/5 hover:bg-[#00FF41]/15 text-[#00FF41] font-mono text-xs tracking-[0.2em] uppercase transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+            >
+              <Usb className="w-3.5 h-3.5" />
+              {isSearching ? "Scanning..." : "Start Scan (demo)"}
+            </button>
+            <button
+              data-testid="btn-webusb-connect"
+              onClick={connectWebUsb}
+              disabled={isSearching || !webusbSupported}
+              title={
+                webusbSupported
+                  ? "Detect a real USB device directly in the browser (Chrome / Edge / Opera)"
+                  : "WebUSB needs Chrome, Edge or Opera on desktop"
+              }
+              className="flex-1 h-10 border border-[#4d8bff]/40 bg-[#4d8bff]/5 hover:bg-[#4d8bff]/15 text-[#4d8bff] font-mono text-xs tracking-[0.2em] uppercase transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+            >
+              <Usb className="w-3.5 h-3.5" />
+              {webusbSupported ? "WebUSB" : "WebUSB N/A"}
+            </button>
+          </>
         ) : (
           <button
             data-testid="btn-disconnect"

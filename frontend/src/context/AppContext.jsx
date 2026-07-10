@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import { generateDevice, COM_PORTS, ACTION_LOG_TEMPLATES, fillTemplate } from "../lib/mockData";
 import { useCliBridge } from "../hooks/useCliBridge";
+import { useWebUsb } from "../hooks/useWebUsb";
 
 const AppContext = createContext(null);
 export const useApp = () => useContext(AppContext);
@@ -39,6 +40,7 @@ export const AppProvider = ({ children }) => {
   const [imeiModalOpen, setImeiModalOpen] = useState(false);
   const timersRef = useRef([]);
   const cliBridge = useCliBridge();
+  const webusb = useWebUsb();
 
   const pushLog = useCallback((level, text) => {
     setLogs((prev) => {
@@ -95,6 +97,65 @@ export const AppProvider = ({ children }) => {
     setActiveAction(null);
     setProgress(0);
   }, [pushLog]);
+
+  // Real in-browser device detection via WebUSB (Chromium + HTTPS). Enumerates
+  // and classifies the connected device by VID/PID. Note: running full exploit
+  // protocols still requires the native aether-cli bridge.
+  const connectWebUsb = useCallback(async () => {
+    if (!webusb.supported) {
+      pushLog("ERROR", "WebUSB unavailable — use Chrome, Edge or Opera on desktop.");
+      return;
+    }
+    pushLog("INFO", "Requesting USB device access (WebUSB) ...");
+    try {
+      const d = await webusb.request();
+      const sig = d.signature;
+      const dev = {
+        model: d.product || `USB Device ${d.vidHex}:${d.pidHex}`,
+        brand: d.manufacturer || "Unknown vendor",
+        platform: sig?.platform || "USB",
+        imei: "N/A (WebUSB)",
+        imei_masked: "N/A (WebUSB)",
+        imei2: "N/A",
+        imei2_masked: "N/A",
+        serial: d.serial || "—",
+        bootloader: sig?.mode || "Interface mode",
+        cpuId: "—",
+        storage: "—",
+        ram: "—",
+        region: "—",
+        vid: d.vidHex,
+        pid: d.pidHex,
+        android: "—",
+        patch: "—",
+        source: "webusb",
+        detectedAt: new Date(),
+      };
+      clearTimers();
+      setDevice(dev);
+      setComPort("WebUSB");
+      setStatus("connected");
+      pushLog("SUCCESS", `WebUSB authorized: ${dev.brand} ${dev.model}`);
+      pushLog("INFO", `USB ${d.vidHex}:${d.pidHex}${d.serial ? ` · SN ${d.serial}` : ""}`);
+      if (sig) {
+        pushLog("SUCCESS", `Repair-mode target recognized: ${sig.platform} — ${sig.mode}`);
+      } else {
+        pushLog(
+          "WARN",
+          "Device not in a known repair mode (BROM/EDL/DFU/Download). Put it in the correct mode for operations."
+        );
+      }
+      pushLog("INFO", "Note: full exploit I/O runs through the Aether CLI bridge.");
+    } catch (e) {
+      if (e?.name === "NotFoundError") {
+        pushLog("WARN", "WebUSB: no device selected.");
+      } else if (e?.name === "SecurityError") {
+        pushLog("ERROR", "WebUSB blocked by permissions policy — open the app in its own Chromium tab.");
+      } else {
+        pushLog("ERROR", `WebUSB error: ${e?.message || e}`);
+      }
+    }
+  }, [webusb, pushLog]);
 
   const runAction = useCallback(
     (actionKey, label, params = {}) => {
@@ -219,6 +280,8 @@ export const AppProvider = ({ children }) => {
     setSoundEnabled,
     startSearch,
     disconnect,
+    connectWebUsb,
+    webusb,
     runAction,
     pushLog,
     clearLogs,
