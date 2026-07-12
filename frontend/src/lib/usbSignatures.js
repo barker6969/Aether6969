@@ -1,34 +1,109 @@
-// Known USB repair-mode signatures (VID/PID). Mirrors the Rust CLI
-// `usb.rs::classify()` so browser-side WebUSB detection labels devices the
-// same way the native bridge does.
+// USB device intelligence for Aether Repair Tool.
+//
+// Two layers:
+//   1. USB_SIGNATURES — exact VID:PID → { platform, mode, repair } matches for
+//      the modes that matter to a repair tech (BROM, EDL, DFU, Download, …).
+//   2. USB_VENDORS — VID → { brand, platform } fallback so an unrecognized PID
+//      still resolves to a sensible brand/platform instead of "unknown".
+//
+// Kept in sync with the Rust CLI `usb.rs::classify()` for the repair-mode PIDs.
+
+// vid:pid → repair-mode signature.
 export const USB_SIGNATURES = [
-  { vid: 0x0e8d, pid: 0x2000, platform: "MediaTek", mode: "BROM / Preloader" },
-  { vid: 0x0e8d, pid: 0x0003, platform: "MediaTek", mode: "Preloader" },
-  { vid: 0x05c6, pid: 0x9008, platform: "Qualcomm", mode: "EDL 9008 (Sahara)" },
-  { vid: 0x05c6, pid: 0x900e, platform: "Qualcomm", mode: "Diagnostic" },
-  { vid: 0x05ac, pid: 0x1227, platform: "Apple", mode: "DFU mode" },
-  { vid: 0x05ac, pid: 0x1281, platform: "Apple", mode: "Recovery mode" },
-  { vid: 0x04e8, pid: 0x685d, platform: "Samsung", mode: "Download mode (Odin)" },
-  { vid: 0x18d1, pid: 0x4ee0, platform: "Android", mode: "Fastboot" },
-  { vid: 0x18d1, pid: 0xd00d, platform: "Android", mode: "Fastboot" },
+  // ── MediaTek ────────────────────────────────────────────────────────────
+  { vid: 0x0e8d, pid: 0x0003, platform: "MediaTek", mode: "Preloader", repair: true },
+  { vid: 0x0e8d, pid: 0x2000, platform: "MediaTek", mode: "BROM (Boot ROM)", repair: true },
+  { vid: 0x0e8d, pid: 0x2001, platform: "MediaTek", mode: "Preloader (DA)", repair: true },
+  { vid: 0x0e8d, pid: 0x201c, platform: "MediaTek", mode: "BROM (secure)", repair: true },
+  // ── Qualcomm ────────────────────────────────────────────────────────────
+  { vid: 0x05c6, pid: 0x9008, platform: "Qualcomm", mode: "EDL 9008 (Sahara)", repair: true },
+  { vid: 0x05c6, pid: 0x900e, platform: "Qualcomm", mode: "Diagnostic (DIAG)", repair: true },
+  { vid: 0x05c6, pid: 0x9006, platform: "Qualcomm", mode: "QDLoader (mass storage)", repair: true },
+  { vid: 0x05c6, pid: 0x676c, platform: "Qualcomm", mode: "QDLoader HS-USB", repair: true },
+  { vid: 0x05c6, pid: 0x9091, platform: "Qualcomm", mode: "EDL (Firehose)", repair: true },
+  // ── Apple ───────────────────────────────────────────────────────────────
+  { vid: 0x05ac, pid: 0x1227, platform: "Apple", mode: "DFU mode", repair: true },
+  { vid: 0x05ac, pid: 0x1281, platform: "Apple", mode: "Recovery mode", repair: true },
+  { vid: 0x05ac, pid: 0x1338, platform: "Apple", mode: "Restore (DFU)", repair: true },
+  { vid: 0x05ac, pid: 0x12a8, platform: "Apple", mode: "Normal (iPhone)", repair: false },
+  { vid: 0x05ac, pid: 0x12aa, platform: "Apple", mode: "Normal (iPod/iPad)", repair: false },
+  // ── Samsung ─────────────────────────────────────────────────────────────
+  { vid: 0x04e8, pid: 0x685d, platform: "Samsung", mode: "Download mode (Odin)", repair: true },
+  { vid: 0x04e8, pid: 0x6601, platform: "Samsung", mode: "Upload / RAM dump", repair: true },
+  { vid: 0x04e8, pid: 0x685e, platform: "Samsung", mode: "Kies", repair: false },
+  { vid: 0x04e8, pid: 0x6860, platform: "Samsung", mode: "Normal (MTP)", repair: false },
+  // ── Spreadtrum / Unisoc ───────────────────────────────────────────────────
+  { vid: 0x1782, pid: 0x4d00, platform: "Unisoc", mode: "SPRD Download", repair: true },
+  { vid: 0x1782, pid: 0x4d01, platform: "Unisoc", mode: "SPRD Diag", repair: true },
+  // ── LG ────────────────────────────────────────────────────────────────────
+  { vid: 0x1004, pid: 0x633e, platform: "Android", mode: "LG Download (LGUP)", repair: true },
+  { vid: 0x1004, pid: 0x627f, platform: "Android", mode: "Normal (LG)", repair: false },
+  // ── Huawei / HiSilicon ─────────────────────────────────────────────────────
+  { vid: 0x12d1, pid: 0x3609, platform: "Android", mode: "COM 1.0 (testpoint DL)", repair: true },
+  { vid: 0x12d1, pid: 0x1010, platform: "Android", mode: "Bootloader (fastboot)", repair: true },
+  // ── Generic Android: fastboot / ADB ────────────────────────────────────────
+  { vid: 0x18d1, pid: 0x4ee0, platform: "Android", mode: "Fastboot", repair: true },
+  { vid: 0x18d1, pid: 0xd00d, platform: "Android", mode: "Fastboot (Nexus)", repair: true },
+  { vid: 0x18d1, pid: 0x4ee7, platform: "Android", mode: "ADB", repair: false },
+  { vid: 0x18d1, pid: 0x4ee1, platform: "Android", mode: "Normal (MTP)", repair: false },
+  // ── Motorola ───────────────────────────────────────────────────────────────
+  { vid: 0x22b8, pid: 0x2e76, platform: "Qualcomm", mode: "Fastboot (Moto)", repair: true },
+  { vid: 0x22b8, pid: 0x2e80, platform: "Qualcomm", mode: "AP Fastboot", repair: true },
 ];
 
-export const classifyUsb = (vid, pid) =>
-  USB_SIGNATURES.find((s) => s.vid === vid && s.pid === pid) || null;
+// VID → brand/platform fallback for devices whose exact PID we don't recognise.
+export const USB_VENDORS = {
+  0x0e8d: { brand: "MediaTek", platform: "MediaTek" },
+  0x05c6: { brand: "Qualcomm", platform: "Qualcomm" },
+  0x05ac: { brand: "Apple", platform: "Apple" },
+  0x04e8: { brand: "Samsung", platform: "Samsung" },
+  0x18d1: { brand: "Google / Android", platform: "Android" },
+  0x2717: { brand: "Xiaomi", platform: "Android" },
+  0x2b4c: { brand: "Xiaomi", platform: "Android" },
+  0x22b8: { brand: "Motorola", platform: "Android" },
+  0x1004: { brand: "LG", platform: "Android" },
+  0x12d1: { brand: "Huawei", platform: "Android" },
+  0x0bb4: { brand: "HTC / OnePlus", platform: "Android" },
+  0x2a70: { brand: "OnePlus", platform: "Android" },
+  0x22d9: { brand: "OPPO / Realme", platform: "Android" },
+  0x2d95: { brand: "Vivo", platform: "Android" },
+  0x1782: { brand: "Spreadtrum / Unisoc", platform: "Unisoc" },
+  0x2e04: { brand: "HMD / Nokia", platform: "Android" },
+  0x0fce: { brand: "Sony", platform: "Android" },
+  0x0489: { brand: "Foxconn / Sony", platform: "Android" },
+  0x19d2: { brand: "ZTE", platform: "Android" },
+  0x1bbb: { brand: "TCL / Alcatel", platform: "Android" },
+  0x0b05: { brand: "ASUS", platform: "Android" },
+  0x0955: { brand: "NVIDIA", platform: "Android" },
+  0x2916: { brand: "Yota / Android", platform: "Android" },
+};
 
-// Vendor filters passed to navigator.usb.requestDevice(). Covers the major
-// phone makers so the browser chooser surfaces relevant devices. (Empty
-// filters would list every USB device incl. hubs/keyboards — too noisy.)
-export const USB_REQUEST_FILTERS = [
-  { vendorId: 0x0e8d }, // MediaTek
-  { vendorId: 0x05c6 }, // Qualcomm
-  { vendorId: 0x05ac }, // Apple
-  { vendorId: 0x04e8 }, // Samsung
-  { vendorId: 0x18d1 }, // Google / generic Android
-  { vendorId: 0x2717 }, // Xiaomi
-  { vendorId: 0x22b8 }, // Motorola
-  { vendorId: 0x1004 }, // LG
-  { vendorId: 0x12d1 }, // Huawei
-  { vendorId: 0x0bb4 }, // HTC / OnePlus
-  { vendorId: 0x2a70 }, // OnePlus / Oppo
-];
+/**
+ * Resolve a USB device to { platform, mode, repair, brand, known }.
+ * Falls back to a vendor-level match, then null if the vendor is unknown too.
+ */
+export const classifyUsb = (vid, pid) => {
+  const sig = USB_SIGNATURES.find((s) => s.vid === vid && s.pid === pid);
+  if (sig) {
+    return { ...sig, brand: USB_VENDORS[vid]?.brand, known: true };
+  }
+  const vendor = USB_VENDORS[vid];
+  if (vendor) {
+    return {
+      vid,
+      pid,
+      platform: vendor.platform,
+      mode: "Standard mode (ADB / MTP / Fastboot)",
+      repair: false,
+      brand: vendor.brand,
+      known: false,
+    };
+  }
+  return null;
+};
+
+// Vendor filters for navigator.usb.requestDevice() — derived from USB_VENDORS
+// so the browser chooser surfaces all supported phone makers.
+export const USB_REQUEST_FILTERS = Object.keys(USB_VENDORS).map((v) => ({
+  vendorId: Number(v),
+}));

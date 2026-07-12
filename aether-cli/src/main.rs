@@ -14,6 +14,7 @@ mod usb;
 mod bridge;
 mod mtkclient;
 mod heimdall;
+mod edl;
 
 use clap::{Parser, Subcommand};
 use colored::Colorize;

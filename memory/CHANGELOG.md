@@ -1,5 +1,31 @@
 # Aether — Changelog
 
+## 2026-07-03 (later) · IMEI Repair modal, WebUSB, aether-cli v0.2.0, code-signing CI
+
+### IMEI Repair modal (P1)
+- **`frontend/src/components/IMEIRepairModal.jsx` (NEW)** — Radix Dialog: IMEI1 (required) + IMEI2 (optional) inputs with live **Luhn validation**, a legal-disclaimer checkbox, digit sanitization (max 15). Submit gated on `imei1Valid && imei2Valid && agreed && connected`. On submit calls `runAction('repair_imei','Repair IMEI',{imei1,imei2})`.
+- **`ActionGrid.jsx`** — `handleAction()` intercepts `repair_imei` → opens the modal instead of firing immediately.
+- **`AppContext.jsx`** — `runAction(key,label,params={})` now forwards params to the live bridge job and, in demo mode, substitutes the entered IMEI into the log template. Added `imeiModalOpen`/`setImeiModalOpen`. `BRIDGE_METHODS.repair_imei` → `mtk.repair_imei`.
+- Verified: iteration_8.json — 12/12 pass.
+
+### WebUSB — real in-browser device detection (user request "add web usb")
+- **`frontend/src/lib/usbSignatures.js` (NEW)** — VID/PID → {platform, mode} classifier (mirrors the Rust `usb.rs::classify()`), plus `USB_REQUEST_FILTERS` (phone-vendor filters for the chooser).
+- **`frontend/src/hooks/useWebUsb.js` (NEW)** — `useWebUsb()` → `{ supported, secure, granted, request(), refreshGranted() }`; guards on `navigator.usb` + `isSecureContext`; listens to connect/disconnect events.
+- **`AppContext.jsx`** — `connectWebUsb()` prompts the browser chooser, classifies the device, sets it as the connected device (real VID/PID/serial, `source:'webusb'`), and logs the detected repair mode. Catches `NotFoundError`/`SecurityError` gracefully. Full exploit I/O still routes through the CLI bridge.
+- **`DeviceStatus.jsx`** — new **WebUSB** button (`btn-webusb-connect`) beside the demo scan; shows "WebUSB N/A" (disabled) on non-Chromium.
+- Verified: iteration_9.json — 100% pass (Chromium: navigator.usb present, graceful no-device handling, demo scan intact).
+
+### aether-cli v0.2.0 + graceful USB-less fallback
+- **`aether-cli/Cargo.toml`** → `0.2.0`; **`frontend/src/lib/releases.js`** `CLI_VERSION` → `0.2.0`.
+- **`aether-cli/src/usb.rs`** — rewritten to use an explicit `Context::new()` that returns `None` on hosts without a USB subsystem (Docker/headless CI) → `enumerate()` yields an empty list instead of panicking. `fmt_device`/`collect_keys` made generic over `UsbContext`.
+- New bridge methods `setup.doctor` + `setup.install_mtkclient` (Setup Wizard live-mode). `cargo check --release` clean, no warnings.
+
+### Code-signing (CI wiring + docs)
+- **`.github/workflows/aether-desktop-release.yml`** — `tauri-action` now forwards the Apple signing/notarization env (`APPLE_*`) + Tauri updater keys; no-ops until the repo secrets are added.
+- **`SIGNING.md` (NEW)** — step-by-step for macOS Developer ID + notarization, Windows Authenticode (Azure Trusted Signing or pfx thumbprint), and optional CLI binary signing.
+
+---
+
 ## 2026-07-03 · Samsung Service made demo-functional + Environment Setup Wizard (P1)
 
 ### Samsung Service — fixed dead demo path

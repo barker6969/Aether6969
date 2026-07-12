@@ -16,6 +16,7 @@ import QualcommService from "./pages/QualcommService";
 import IPhoneService from "./pages/IPhoneService";
 import SamsungService from "./pages/SamsungService";
 import Logs from "./pages/Logs";
+import Drivers from "./pages/Drivers";
 import Pricing from "./pages/Pricing";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
@@ -42,6 +43,7 @@ function AppShell() {
               <Route path="/qualcomm" element={<QualcommService />} />
               <Route path="/iphone" element={<IPhoneService />} />
               <Route path="/samsung" element={<SamsungService />} />
+              <Route path="/drivers" element={<Drivers />} />
               <Route path="/logs" element={<Logs />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/docs" element={<DocsHub />} />

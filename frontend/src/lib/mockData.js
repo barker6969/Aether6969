@@ -10,6 +10,22 @@ const MTK_DEVICES = [
   { model: "MT6878 (Dimensity 7400)", brand: "Realme Narzo 70 Pro", android: "14", patch: "2024-11-01" },
   { model: "MT6886 (Dimensity 7300X)", brand: "Honor Magic V2", android: "14", patch: "2024-10-05" },
   { model: "MT8676 (Dimensity 9400)", brand: "OPPO Find X8 Pro", android: "15", patch: "2025-02-01" },
+  { model: "MT6833 (Dimensity 700)", brand: "Samsung Galaxy A23 5G", android: "13", patch: "2024-03-05" },
+  { model: "MT6768 (Helio G85)", brand: "Redmi Note 11", android: "12", patch: "2023-11-01" },
+  { model: "MT6785 (Helio G90T)", brand: "Redmi Note 8 Pro", android: "11", patch: "2022-06-01" },
+  { model: "MT6853 (Dimensity 720)", brand: "Realme 7 5G", android: "12", patch: "2023-02-05" },
+  { model: "MT6885 (Dimensity 1000+)", brand: "OPPO Reno 5 Pro", android: "12", patch: "2023-04-01" },
+  { model: "MT6893 (Dimensity 1200)", brand: "Redmi K40 Gaming", android: "13", patch: "2024-01-05" },
+  { model: "MT6771 (Helio P60)", brand: "OPPO F7", android: "10", patch: "2021-09-01" },
+  { model: "MT6765 (Helio P35)", brand: "Infinix Hot 12", android: "12", patch: "2023-07-01" },
+  { model: "MT6580 (Quad Cortex-A7)", brand: "Nokia 1", android: "8.1", patch: "2019-05-01" },
+  { model: "MT6739 (Quad Cortex-A53)", brand: "Tecno Spark 4", android: "9", patch: "2020-11-01" },
+  { model: "MT6873 (Dimensity 800)", brand: "Redmi 10X 5G", android: "12", patch: "2023-03-01" },
+  { model: "MT6833V (Dimensity 700)", brand: "POCO M4 Pro 5G", android: "13", patch: "2024-02-01" },
+  { model: "MT6886 (Dimensity 7200 Pro)", brand: "Nothing Phone (2a)", android: "14", patch: "2024-10-01" },
+  { model: "MT6891 (Dimensity 1100)", brand: "iQOO Z3", android: "12", patch: "2023-05-01" },
+  { model: "MT6785V (Helio G95)", brand: "Realme 7", android: "11", patch: "2022-08-01" },
+  { model: "MT6763 (Helio P23)", brand: "Lenovo K5 Pro", android: "9", patch: "2020-07-01" },
 ];
 
 const QC_DEVICES = [
@@ -23,6 +39,21 @@ const QC_DEVICES = [
   { model: "SM7650 (Snapdragon 7s Gen 3)", brand: "Xiaomi Redmi Note 14 Pro", android: "14", patch: "2024-12-05" },
   { model: "SM8635 (Snapdragon 8s Gen 3)", brand: "iQOO Neo 9 Pro", android: "14", patch: "2024-09-05" },
   { model: "SM4450 (Snapdragon 4 Gen 2)", brand: "Motorola Moto G35", android: "14", patch: "2024-10-01" },
+  { model: "SM8450 (Snapdragon 8 Gen 1)", brand: "Samsung S22 Ultra", android: "14", patch: "2024-08-01" },
+  { model: "SM8350 (Snapdragon 888)", brand: "Xiaomi Mi 11", android: "13", patch: "2023-12-01" },
+  { model: "SM8250 (Snapdragon 865)", brand: "OnePlus 8 Pro", android: "13", patch: "2023-05-01" },
+  { model: "SM7325 (Snapdragon 778G)", brand: "Realme GT Master", android: "13", patch: "2024-01-05" },
+  { model: "SM6225 (Snapdragon 680)", brand: "Redmi 12", android: "13", patch: "2024-03-01" },
+  { model: "SM6115 (Snapdragon 662)", brand: "Motorola G9 Play", android: "11", patch: "2022-05-01" },
+  { model: "SM7250 (Snapdragon 765G)", brand: "Google Pixel 5", android: "14", patch: "2024-10-05" },
+  { model: "SM7150 (Snapdragon 730G)", brand: "POCO X2", android: "11", patch: "2022-01-01" },
+  { model: "SM6350 (Snapdragon 690)", brand: "OnePlus Nord N10", android: "12", patch: "2023-02-01" },
+  { model: "SM8150 (Snapdragon 855)", brand: "ASUS ZenFone 6", android: "12", patch: "2022-11-01" },
+  { model: "SM7435 (Snapdragon 6 Gen 1)", brand: "Samsung Galaxy A35", android: "14", patch: "2024-11-01" },
+  { model: "SM8550 (Snapdragon 8 Gen 2)", brand: "Sony Xperia 1 V", android: "14", patch: "2024-09-01" },
+  { model: "SM7550 (Snapdragon 7 Gen 3)", brand: "Nothing Phone (2)", android: "14", patch: "2024-12-01" },
+  { model: "SM4375 (Snapdragon 4 Gen 1)", brand: "Redmi 12C", android: "13", patch: "2024-04-01" },
+  { model: "SM6450 (Snapdragon 6s Gen 3)", brand: "Redmi 13", android: "14", patch: "2024-12-15" },
 ];
 
 // Samsung devices reachable via Download Mode (Odin/Loke — Heimdall).
@@ -37,6 +68,16 @@ const SAMSUNG_DEVICES = [
   { model: "Galaxy Tab S3 (SM-T820)",  brand: "Samsung Galaxy Tab S3", android: "9",  patch: "2019-12-01" },
   { model: "Galaxy S10 (SM-G973F)",    brand: "Samsung Galaxy S10",    android: "12", patch: "2023-02-01" },
   { model: "Galaxy A51 (SM-A515F)",    brand: "Samsung Galaxy A51",    android: "13", patch: "2023-08-01" },
+  { model: "Galaxy S7 (SM-G930F)",     brand: "Samsung Galaxy S7",     android: "8",  patch: "2018-08-01" },
+  { model: "Galaxy S6 (SM-G920F)",     brand: "Samsung Galaxy S6",     android: "7",  patch: "2017-05-01" },
+  { model: "Galaxy Note 8 (SM-N950F)", brand: "Samsung Galaxy Note 8", android: "9",  patch: "2020-01-01" },
+  { model: "Galaxy A5 2017 (SM-A520F)",brand: "Samsung Galaxy A5",     android: "8",  patch: "2018-11-01" },
+  { model: "Galaxy A10 (SM-A105F)",    brand: "Samsung Galaxy A10",    android: "11", patch: "2021-09-01" },
+  { model: "Galaxy A20 (SM-A205F)",    brand: "Samsung Galaxy A20",    android: "11", patch: "2021-10-01" },
+  { model: "Galaxy J5 2016 (SM-J510F)",brand: "Samsung Galaxy J5",     android: "7",  patch: "2018-04-01" },
+  { model: "Galaxy Tab A (SM-T510)",   brand: "Samsung Galaxy Tab A",  android: "11", patch: "2022-02-01" },
+  { model: "Galaxy S5 (SM-G900F)",     brand: "Samsung Galaxy S5",     android: "6",  patch: "2016-06-01" },
+  { model: "Galaxy Note 5 (SM-N920F)", brand: "Samsung Galaxy Note 5", android: "7",  patch: "2017-08-01" },
 ];
 
 const randomHex = (len) =>
@@ -142,6 +183,14 @@ export const ACTION_LOG_TEMPLATES = {
     { level: "INFO", text: "CPU ID: {CPUID}" },
     { level: "INFO", text: "Serial: {SERIAL}" },
     { level: "SUCCESS", text: "Device fingerprint captured." },
+  ],
+  // ──────────── QUALCOMM · CABLE-FREE EDL ENTRY ────────────
+  enter_edl: [
+    { level: "INFO", text: "Looking for ADB / fastboot device on the USB bus ..." },
+    { level: "INFO", text: "$ adb reboot edl   (no deep-flash cable required)" },
+    { level: "INFO", text: "Device acknowledged · rebooting to Emergency Download ..." },
+    { level: "INFO", text: "Re-enumerating USB → 05c6:9008 Qualcomm HS-USB QDLoader 9008" },
+    { level: "SUCCESS", text: "EDL 9008 active. Sahara handshake ready — no EDL cable used." },
   ],
   // ──────────── SAMSUNG · HEIMDALL (ODIN/LOKE) ────────────
   samsung_detect: [

@@ -16,6 +16,7 @@ const BRIDGE_METHODS = {
   unlock_bootloader:      { method: "mtk.unlock_bootloader" },
   erase_userdata:         { method: "mtk.erase_userdata" },
   read_info:              { method: "mtk.read_info" },
+  enter_edl:              { method: "qualcomm.enter_edl" },
   samsung_detect:         { method: "samsung.detect" },
   samsung_read_pit:       { method: "samsung.read_pit" },
   samsung_factory_reset:  { method: "samsung.factory_reset" },
@@ -112,7 +113,7 @@ export const AppProvider = ({ children }) => {
       const sig = d.signature;
       const dev = {
         model: d.product || `USB Device ${d.vidHex}:${d.pidHex}`,
-        brand: d.manufacturer || "Unknown vendor",
+        brand: d.manufacturer || sig?.brand || "Unknown vendor",
         platform: sig?.platform || "USB",
         imei: "N/A (WebUSB)",
         imei_masked: "N/A (WebUSB)",
@@ -137,13 +138,15 @@ export const AppProvider = ({ children }) => {
       setStatus("connected");
       pushLog("SUCCESS", `WebUSB authorized: ${dev.brand} ${dev.model}`);
       pushLog("INFO", `USB ${d.vidHex}:${d.pidHex}${d.serial ? ` · SN ${d.serial}` : ""}`);
-      if (sig) {
+      if (sig?.repair) {
         pushLog("SUCCESS", `Repair-mode target recognized: ${sig.platform} — ${sig.mode}`);
-      } else {
+      } else if (sig) {
         pushLog(
           "WARN",
-          "Device not in a known repair mode (BROM/EDL/DFU/Download). Put it in the correct mode for operations."
+          `${sig.brand || sig.platform} detected in ${sig.mode}. Switch to BROM / EDL / DFU / Download mode for repair operations.`
         );
+      } else {
+        pushLog("WARN", `Unrecognized USB vendor ${d.vidHex}:${d.pidHex}. Put the device in a known repair mode and retry.`);
       }
       pushLog("INFO", "Note: full exploit I/O runs through the Aether CLI bridge.");
     } catch (e) {

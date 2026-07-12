@@ -25,6 +25,7 @@ use tokio_tungstenite::tungstenite::Message;
 
 use crate::heimdall;
 use crate::mtkclient;
+use crate::edl;
 
 const CLI_VERSION: &str = env!("CARGO_PKG_VERSION");
 const BRIDGE_VERSION: &str = "2";
@@ -176,11 +177,17 @@ fn spawn_pip_mtkclient_job(write: WsSink) -> String {
     spawn_job(Vec::new(), write, JobTool::PipMtkclient)
 }
 
+/// Spawn a cable-free EDL entry job (adb/fastboot reboot to 9008).
+fn spawn_enter_edl_job(write: WsSink) -> String {
+    spawn_job(Vec::new(), write, JobTool::EnterEdl)
+}
+
 #[derive(Clone, Copy)]
 enum JobTool {
     Mtkclient,
     Heimdall,
     PipMtkclient,
+    EnterEdl,
 }
 
 fn spawn_job(args: Vec<String>, write: WsSink, tool: JobTool) -> String {
@@ -195,6 +202,7 @@ fn spawn_job(args: Vec<String>, write: WsSink, tool: JobTool) -> String {
                 JobTool::Mtkclient => mtkclient::run_mtkclient_streaming(&refs, tx).await,
                 JobTool::Heimdall => heimdall::run_heimdall_streaming(&refs, tx).await,
                 JobTool::PipMtkclient => mtkclient::install_mtkclient_streaming(tx).await,
+                JobTool::EnterEdl => edl::enter_edl_streaming(tx).await,
             }
         });
         while let Some(sl) = rx.recv().await {
@@ -259,12 +267,19 @@ async fn dispatch(method: &str, params: &Value, write: &WsSink) -> Result<Value,
                     "samsung.detect",
                     "samsung.read_pit",
                     "samsung.factory_reset",
+                    "qualcomm.enter_edl",
                     "setup.doctor",
                     "setup.install_mtkclient"
                 ],
             }))
         }
         "devices" => Ok(json!({ "devices": crate::usb::devices_as_json().unwrap_or_default() })),
+
+        // Cable-free EDL entry: reboot an ADB/fastboot device into Qualcomm 9008.
+        "qualcomm.enter_edl" => {
+            let job_id = spawn_enter_edl_job(write.clone());
+            Ok(json!({ "job_id": job_id, "status": "started" }))
+        }
 
         "mtk.read_info" => {
             let job_id = spawn_mtkclient_job(vec!["printgpt".into()], write.clone());

@@ -3,7 +3,7 @@ import { ActionGrid, QC_ACTIONS } from "../components/ActionGrid";
 import { DeviceInfoPanel } from "../components/DeviceInfoPanel";
 import { Console } from "../components/Console";
 import { useApp } from "../context/AppContext";
-import { Radio, AlertTriangle } from "lucide-react";
+import { Radio, AlertTriangle, Zap } from "lucide-react";
 
 const SUPPORTED = [
   "SM6115", "SM6225", "SM6375", "SM7125", "SM7150", "SM7250", "SM7325",
@@ -48,6 +48,19 @@ export default function QualcommService() {
           </span>
         </div>
       )}
+
+      <div
+        data-testid="edl-no-cable-note"
+        className="bg-[#4d8bff]/5 border border-[#4d8bff]/25 px-4 py-2.5 flex items-start gap-3 flex-shrink-0"
+      >
+        <Zap className="w-4 h-4 text-[#4d8bff] mt-0.5 flex-shrink-0" strokeWidth={2} />
+        <span className="font-mono text-[11px] text-[#a9c7ff]/85 leading-relaxed">
+          <b className="text-white">EDL without a cable:</b> hit <b>Enter EDL (no cable)</b> below — it runs
+          <code className="bg-black/40 px-1 mx-1">adb reboot edl</code> or
+          <code className="bg-black/40 px-1 mx-1">fastboot oem edl</code>. A deep-flash cable is only needed for a
+          hard-bricked unit; otherwise short the board test-point (ISP) to GND while plugging in.
+        </span>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-shrink-0">
         <div className="lg:col-span-8">

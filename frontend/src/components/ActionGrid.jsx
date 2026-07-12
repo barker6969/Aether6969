@@ -36,6 +36,7 @@ const ICONS = {
   ShieldCheck,
   Activity,
   Search,
+  Zap,
 };
 
 const DEFAULT_ACTIONS = [
@@ -154,6 +155,7 @@ export const MTK_ACTIONS = [
 ];
 
 export const QC_ACTIONS = [
+  { key: "enter_edl",         label: "Enter EDL (no cable)", icon: "Zap",     danger: false, testid: "action-enter-edl",    cost: "Free" },
   ...DEFAULT_ACTIONS,
   { key: "knox_suspend",      label: "Samsung KG Suspend", icon: "Lock",      danger: false, testid: "action-knox-suspend", cost: "15 Credits" },
   { key: "carrier_unlock",    label: "Carrier Unlock",     icon: "Wifi",      danger: false, testid: "action-carrier-unlock", cost: "12 Credits" },
