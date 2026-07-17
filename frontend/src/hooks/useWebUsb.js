@@ -33,8 +33,8 @@ export function useWebUsb() {
     try {
       const list = await navigator.usb.getDevices();
       setGranted(list.map(normalize));
-    } catch {
-      /* ignore */
+    } catch (e) {
+      console.debug("[webusb] getDevices failed:", e);
     }
   }, [supported]);
 

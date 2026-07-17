@@ -58,10 +58,10 @@ export const AppProvider = ({ children }) => {
     pushLog("INFO", "Console cleared by user.");
   }, [pushLog]);
 
-  const clearTimers = () => {
+  const clearTimers = useCallback(() => {
     timersRef.current.forEach((t) => clearTimeout(t));
     timersRef.current = [];
-  };
+  }, []);
 
   const startSearch = useCallback((forceChipset = "auto") => {
     // Coerce accidental event-object args (onClick={startSearch}) back to auto.
@@ -87,7 +87,7 @@ export const AppProvider = ({ children }) => {
       pushLog("INFO", `Brand: ${dev.brand} | Android ${dev.android} | Patch ${dev.patch}`);
     }, 2800);
     timersRef.current = [t1, t2, t2b, t3];
-  }, [pushLog]);
+  }, [pushLog, clearTimers]);
 
   const disconnect = useCallback(() => {
     clearTimers();
@@ -97,7 +97,7 @@ export const AppProvider = ({ children }) => {
     setComPort(null);
     setActiveAction(null);
     setProgress(0);
-  }, [pushLog]);
+  }, [pushLog, clearTimers]);
 
   // Real in-browser device detection via WebUSB (Chromium + HTTPS). Enumerates
   // and classifies the connected device by VID/PID. Note: running full exploit
@@ -158,7 +158,7 @@ export const AppProvider = ({ children }) => {
         pushLog("ERROR", `WebUSB error: ${e?.message || e}`);
       }
     }
-  }, [webusb, pushLog]);
+  }, [webusb, pushLog, clearTimers]);
 
   const runAction = useCallback(
     (actionKey, label, params = {}) => {
@@ -266,7 +266,7 @@ export const AppProvider = ({ children }) => {
       timersRef.current.push(t);
     }
     return () => clearTimers();
-  }, [autoConnect, pushLog, startSearch]);
+  }, [autoConnect, pushLog, startSearch, clearTimers]);
 
   const value = {
     status,

@@ -105,6 +105,70 @@ const CommandRow = ({ cmd, isUrl, testid }) => (
   </div>
 );
 
+// A single dependency row (CLI / mtkclient / Heimdall) with status pill,
+// OS-specific install command and any per-dependency action.
+const DependencyCard = ({ d, os, connected, installing, onAutoInstall }) => {
+  const Icon = d.icon;
+  const cmd = CMDS[d.key][os];
+  const isUrl = cmd.startsWith("http");
+  const showInstall = d.state !== "ok";
+  return (
+    <div data-testid={`setup-dep-${d.key}`} className="border border-white/10 bg-[#09090B]">
+      <div className="flex items-center gap-3 px-4 py-3">
+        <div className="w-9 h-9 border border-white/10 flex items-center justify-center text-white/70 flex-shrink-0">
+          <Icon className="w-4 h-4" strokeWidth={1.8} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold text-white flex items-center gap-2">
+            {d.name}
+            {d.required && (
+              <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-white/30">required</span>
+            )}
+          </div>
+          <div className="font-mono text-[10px] text-white/40 mt-0.5 truncate">{d.subtitle}</div>
+        </div>
+        <StatusPill state={d.state} version={d.version} />
+      </div>
+
+      {showInstall && (
+        <div className="px-4 pb-4 pt-1 space-y-2 border-t border-white/5">
+          <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-white/40 pt-2">
+            {d.key === "cli"
+              ? "Start the bridge"
+              : `Install on ${OS_LABELS[os]}${isUrl ? " (download + Zadig driver)" : ""}`}
+          </div>
+          <CommandRow cmd={cmd} isUrl={isUrl} testid={`setup-copy-${d.key}`} />
+          {d.note && <div className="font-mono text-[10px] text-white/40">{d.note}</div>}
+
+          {d.key === "cli" && !connected && (
+            <a
+              href={`${CLI_RELEASES_BASE}/aether-cli-${CLI_VERSION}-x86_64-pc-windows-msvc.zip`}
+              target="_blank"
+              rel="noreferrer"
+              data-testid="setup-download-cli"
+              className="inline-flex items-center gap-2 h-8 px-3 border border-[#00FF41]/40 hover:bg-[#00FF41]/10 text-[#00FF41] font-mono text-[10px] tracking-[0.2em] uppercase transition-colors"
+            >
+              <Download className="w-3 h-3" />
+              Download Aether CLI
+            </a>
+          )}
+          {d.key === "mtkclient" && connected && d.state === "missing" && (
+            <button
+              data-testid="setup-autoinstall-mtkclient"
+              onClick={onAutoInstall}
+              disabled={installing}
+              className="inline-flex items-center gap-2 h-8 px-3 bg-[#00FF41] hover:bg-[#00CC33] text-black font-mono text-[10px] tracking-[0.2em] uppercase font-bold transition-colors disabled:opacity-50"
+            >
+              {installing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+              {installing ? "Installing…" : "Auto-install via CLI"}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const SetupWizard = () => {
   const { setupOpen, setSetupOpen, cliBridge, pushLog } = useApp();
   const [os, setOs] = useState(detectOS);
@@ -202,8 +266,8 @@ export const SetupWizard = () => {
           setSetupOpen(true);
           localStorage.setItem("aether.setup.autoshown", "1");
         }
-      } catch {
-        /* ignore */
+      } catch (e) {
+        console.debug("[setup-wizard] autoshow flag unavailable:", e);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -273,74 +337,16 @@ export const SetupWizard = () => {
 
         {/* Dependency cards */}
         <div className="px-6 py-4 space-y-3 max-h-[46vh] overflow-y-auto">
-          {deps.map((d) => {
-            const Icon = d.icon;
-            const cmd = CMDS[d.key][os];
-            const isUrl = cmd.startsWith("http");
-            const showInstall = d.state !== "ok";
-            return (
-              <div
-                key={d.key}
-                data-testid={`setup-dep-${d.key}`}
-                className="border border-white/10 bg-[#09090B]"
-              >
-                <div className="flex items-center gap-3 px-4 py-3">
-                  <div className="w-9 h-9 border border-white/10 flex items-center justify-center text-white/70 flex-shrink-0">
-                    <Icon className="w-4 h-4" strokeWidth={1.8} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-white flex items-center gap-2">
-                      {d.name}
-                      {d.required && (
-                        <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-white/30">required</span>
-                      )}
-                    </div>
-                    <div className="font-mono text-[10px] text-white/40 mt-0.5 truncate">{d.subtitle}</div>
-                  </div>
-                  <StatusPill state={d.state} version={d.version} />
-                </div>
-
-                {showInstall && (
-                  <div className="px-4 pb-4 pt-1 space-y-2 border-t border-white/5">
-                    <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-white/40 pt-2">
-                      {d.key === "cli"
-                        ? "Start the bridge"
-                        : `Install on ${OS_LABELS[os]}${isUrl ? " (download + Zadig driver)" : ""}`}
-                    </div>
-                    <CommandRow cmd={cmd} isUrl={isUrl} testid={`setup-copy-${d.key}`} />
-                    {d.note && (
-                      <div className="font-mono text-[10px] text-white/40">{d.note}</div>
-                    )}
-
-                    {/* Per-dependency actions */}
-                    {d.key === "cli" && !connected && (
-                      <a
-                        href={`${CLI_RELEASES_BASE}/aether-cli-${CLI_VERSION}-x86_64-pc-windows-msvc.zip`}
-                        target="_blank"
-                        rel="noreferrer"
-                        data-testid="setup-download-cli"
-                        className="inline-flex items-center gap-2 h-8 px-3 border border-[#00FF41]/40 hover:bg-[#00FF41]/10 text-[#00FF41] font-mono text-[10px] tracking-[0.2em] uppercase transition-colors"
-                      >
-                        <Download className="w-3 h-3" />
-                        Download Aether CLI
-                      </a>
-                    )}
-                    {d.key === "mtkclient" && connected && d.state === "missing" && (
-                      <button
-                        data-testid="setup-autoinstall-mtkclient"
-                        onClick={autoInstallMtk}
-                        disabled={installing}
-                        className="inline-flex items-center gap-2 h-8 px-3 bg-[#00FF41] hover:bg-[#00CC33] text-black font-mono text-[10px] tracking-[0.2em] uppercase font-bold transition-colors disabled:opacity-50"
-                      >
-                        {installing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
-                        {installing ? "Installing…" : "Auto-install via CLI"}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {deps.map((d) => (
+            <DependencyCard
+              key={d.key}
+              d={d}
+              os={os}
+              connected={connected}
+              installing={installing}
+              onAutoInstall={autoInstallMtk}
+            />
+          ))}
         </div>
 
         {/* Footer */}

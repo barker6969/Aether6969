@@ -44,7 +44,7 @@ export function useCliBridge() {
       reconnectRef.current = null;
     }
     if (wsRef.current) {
-      try { wsRef.current.close(); } catch { /* ignore */ }
+      try { wsRef.current.close(); } catch (e) { console.debug("[cli-bridge] socket close failed:", e); }
       wsRef.current = null;
     }
   }, []);
@@ -145,7 +145,7 @@ export function useCliBridge() {
         }
         const jobId = res.job_id;
         jobSubsRef.current.set(jobId, (ev) => {
-          try { onEvent?.(ev); } catch (_) { /* user callback bug — ignore */ }
+          try { onEvent?.(ev); } catch (err) { console.error("[cli-bridge] job onEvent callback threw:", err); }
           if (ev.stream === "done") {
             resolve(ev.exit_code);
           }
