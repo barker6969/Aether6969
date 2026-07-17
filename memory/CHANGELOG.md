@@ -1,5 +1,26 @@
 # Aether — Changelog
 
+## 2026-07-03 (v3) · Device-intelligence beef-up, Drivers Center, cable-free EDL
+
+### Expanded phone catalog + USB signature database ("beef it up / more phone options")
+- **`frontend/src/lib/mockData.js`** — MTK pool 10→17, Qualcomm 10→16, Samsung 8→19 device entries (Redmi/POCO/Pixel/Nothing/Galaxy A-J-Tab, Exynos legacy, etc.) for a much richer demo cycler.
+- **`frontend/src/lib/usbSignatures.js`** — reworked into a 2-layer model: `USB_SIGNATURES` (30 exact VID:PID → platform/mode/repair rows across MediaTek/Qualcomm/Apple/Samsung/Unisoc/LG/Huawei/fastboot/ADB/Motorola) + `USB_VENDORS` (23 VID → brand/platform fallback). `classifyUsb()` now falls back to vendor-level brand so unrecognized PIDs still resolve; `USB_REQUEST_FILTERS` derived from the vendor list.
+- **`AppContext.connectWebUsb()`** — uses the richer signature: brand fallback, repair-mode vs standard-mode logging.
+
+### Drivers & Tools Download Center ("have all the phone drivers downloadable from app")
+- **`frontend/src/lib/drivers.js` (NEW)** — 18 curated drivers/tools (chipset: Qualcomm 9008, MediaTek VCOM, SPD/Unisoc; OEM: Google, Samsung, Xiaomi, Huawei, LG, Sony, Motorola, OPPO/Realme, Vivo, Nokia/HMD; tools: platform-tools adb/fastboot [per-OS], Zadig, libusb, Apple Devices, SP Flash Tool). Each tagged Official / MS Update Catalog / Community.
+- **`frontend/src/pages/Drivers.jsx` (NEW)** — search + category filter + responsive card grid, per-OS download buttons, source badges. Route `/drivers` + Sidebar `nav-drivers`.
+
+### Cable-free EDL entry (answer to "use EDL mode without the EDL cable")
+- **Rust `edl.rs` (NEW)** — `enter_edl_streaming()` tries `adb reboot edl` → `fastboot reboot-edl` → `fastboot oem edl`, streaming output; guides to the test-point (ISP) method on failure. Wired as `bridge.rs` method `qualcomm.enter_edl` (+ capability, `JobTool::EnterEdl`).
+- **Frontend** — `QC_ACTIONS` gains "Enter EDL (no cable)" (`action-enter-edl`, first action); `ACTION_LOG_TEMPLATES.enter_edl` demo; `BRIDGE_METHODS.enter_edl`; Qualcomm page `edl-no-cable-note` info strip (adb/fastboot/test-point).
+
+### UX: deterministic demo connect per module
+- **MTK / Qualcomm / Samsung pages** — a "Connect MTK / Qualcomm / Samsung" header button (`mtk-connect-btn` / `qualcomm-connect-btn` / `samsung-connect-btn`) forces a simulated device of that platform via `startSearch("MTK"|"QC"|"SAMSUNG")`, so techs don't re-scan repeatedly.
+- Verified: iteration_10.json — 100% pass (Drivers, EDL demo, expanded catalog, WebUSB regression, all 10 routes). Connect buttons/2 extra drivers added post-report (compile-clean, smoke-verified, mirror the tested Samsung pattern).
+
+---
+
 ## 2026-07-03 (later) · IMEI Repair modal, WebUSB, aether-cli v0.2.0, code-signing CI
 
 ### IMEI Repair modal (P1)

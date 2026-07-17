@@ -70,3 +70,11 @@ EVERYTHING is MOCKED — there is no real device interaction, no real bypass / r
 - **Environment Setup Wizard (`SetupWizard.jsx`)**: Radix Dialog opened from the WindowChrome "Setup" button, the Settings "Environment · Local CLI" card, and the Samsung Heimdall-missing banner. Detects Aether CLI bridge / mtkclient / Heimdall status from `cliBridge.info`, shows OS-specific copy-paste install commands (Windows/macOS/Linux), a Re-check button (`setup.doctor`), and an Auto-install-via-CLI button for mtkclient (`setup.install_mtkclient` streaming pip). Live-mode buttons only enable when the CLI bridge is connected; auto-opens once when a live CLI reports a missing dependency (never in the web demo). (Verified iteration_7.json — 12/12.)
 - **Rust CLI additions** (compile-checked, ship in aether-cli v0.2.0): `mtkclient::check_python()`, `mtkclient::install_mtkclient_streaming()`, bridge methods `setup.doctor` + `setup.install_mtkclient`, `JobTool::PipMtkclient`.
 - Container note: no USB/CLI hardware in the cloud preview — everything above is verified in DEMO mode; live-mode paths run on the user's real desktop with `aether-cli serve`.
+
+## Device intelligence, Drivers Center & cable-free EDL (Jul 2026)
+- **IMEI Repair modal** (Luhn-validated IMEI1/IMEI2 + legal disclaimer → `mtk.repair_imei`). Verified iteration_8.
+- **WebUSB** in-browser device detection (`useWebUsb` + `connectWebUsb`) with a 30-signature / 23-vendor VID:PID database (`usbSignatures.js`) shared conceptually with the Rust `usb.rs`. Detection/identify only; full I/O via CLI. Verified iteration_9.
+- **Drivers & Tools Center** (`/drivers`) — 18 curated USB drivers + flashing tools (chipset / OEM / tools) with search, category filter, per-OS downloads, and Official/MS-Catalog/Community source tags.
+- **Cable-free EDL** — Qualcomm "Enter EDL (no cable)" action + Rust `qualcomm.enter_edl` (adb reboot edl → fastboot reboot-edl → fastboot oem edl, else test-point guidance). No deep-flash cable needed for devices that still reach ADB/fastboot.
+- **Expanded demo catalog** (MTK 17 / QC 16 / Samsung 19 models) + per-module deterministic "Connect MTK/Qualcomm/Samsung" buttons. Verified iteration_10 (100%).
+- **aether-cli v0.2.0** + graceful USB-less `rusb` fallback; **code-signing** CI wiring + `/SIGNING.md`.

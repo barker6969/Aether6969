@@ -116,6 +116,15 @@ export const DRIVERS = [
     url: "https://vivousbdriver.com/",
     desc: "Vivo / iQOO ADB + download-mode driver.",
   },
+  {
+    id: "nokia-hmd",
+    name: "Nokia / HMD USB Driver",
+    category: "OEM USB",
+    platforms: ["Windows"],
+    source: "Community",
+    url: "https://mtkdriver.com/nokia-usb-driver/",
+    desc: "Nokia (HMD Global) ADB + preloader driver for MTK & Qualcomm Nokia models.",
+  },
   // ── Tools ─────────────────────────────────────────────────────────────────
   {
     id: "platform-tools",
@@ -138,6 +147,15 @@ export const DRIVERS = [
     source: "Official",
     url: "https://zadig.akeo.ie/",
     desc: "Installs WinUSB/libusb so mtkclient / edl.py can claim BROM & EDL interfaces on Windows.",
+  },
+  {
+    id: "sp-flash-tool",
+    name: "SP Flash Tool (MediaTek)",
+    category: "Tools",
+    platforms: ["Windows", "Linux"],
+    source: "Community",
+    url: "https://spflashtool.com/",
+    desc: "Smart Phone Flash Tool — scatter-based firmware flashing for MediaTek MT65xx/67xx/68xx.",
   },
   {
     id: "libusb",

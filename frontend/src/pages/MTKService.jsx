@@ -3,7 +3,7 @@ import { ActionGrid, MTK_ACTIONS } from "../components/ActionGrid";
 import { DeviceInfoPanel } from "../components/DeviceInfoPanel";
 import { Console } from "../components/Console";
 import { useApp } from "../context/AppContext";
-import { Cpu, AlertTriangle } from "lucide-react";
+import { Cpu, AlertTriangle, Usb, Loader2 } from "lucide-react";
 
 const SUPPORTED = [
   "MT6580", "MT6735", "MT6739", "MT6750", "MT6757", "MT6761", "MT6765",
@@ -18,7 +18,7 @@ const SUPPORTED = [
 ];
 
 export default function MTKService() {
-  const { device, status } = useApp();
+  const { device, status, startSearch } = useApp();
   const matches = device && device.platform === "MediaTek";
 
   return (
@@ -40,6 +40,18 @@ export default function MTKService() {
             {device ? device.model.split(" ")[0] : "—"}
           </div>
         </div>
+        {!matches && (
+          <button
+            data-testid="mtk-connect-btn"
+            onClick={() => startSearch("MTK")}
+            disabled={status === "searching"}
+            className="h-10 px-4 border border-[#00FF41]/40 bg-[#00FF41]/5 hover:bg-[#00FF41]/15 text-[#00FF41] font-mono text-[11px] tracking-[0.18em] uppercase transition-colors disabled:opacity-40 flex items-center justify-center gap-2 flex-shrink-0"
+            title="Web demo — simulates a MediaTek device entering BROM mode."
+          >
+            {status === "searching" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Usb className="w-3.5 h-3.5" />}
+            {status === "searching" ? "Scanning…" : "Connect MTK"}
+          </button>
+        )}
       </div>
 
       {!matches && status === "connected" && (
