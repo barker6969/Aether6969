@@ -266,7 +266,9 @@ export const AppProvider = ({ children }) => {
       timersRef.current.push(t);
     }
     return () => clearTimers();
-  }, [autoConnect, pushLog, startSearch, clearTimers]);
+    // Boot must run exactly once; bootedRef guards re-entry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value = {
     status,
