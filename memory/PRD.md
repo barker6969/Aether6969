@@ -23,25 +23,37 @@ Desktop-style dashboard for a mobile-repair suite named "Aether Repair Tool". UI
 
 ## Deployment
 - ✅ Deployment health check PASSED (Feb 2026)
-- Fixed: `.gitignore` was blocking `.env` files (removed lines)
-- Fixed: `AppContext.jsx` boot `useEffect` cleanup regression (P0)
 
-## Code Quality Sweep — Feb 2026
-Applied review-driven refactors, all lint-clean, 100% frontend regression pass (iteration_11):
-- `DeviceStatus.jsx`: HEADER_STATES lookup + 6 single-purpose sub-components (replaces nested ternaries)
-- `ActionGrid.jsx`: extracted `ActionButton` component (removed 20-line inline map)
+## Code Quality — Sweep 1 (Feb 2026, iteration_11)
+- `DeviceStatus.jsx`: HEADER_STATES lookup + 6 single-purpose sub-components
+- `ActionGrid.jsx`: extracted `ActionButton`
 - `BuyCreditsModal.jsx`: extracted `PlanCard` + `PackCard`
 - `CloudExploitDB.jsx`: extracted `CVEEntry` + `useMemo` on visible/counts
 - `ProtectedRoute.jsx`: `useMemo` for redirect state
-- `useCliBridge.js`: removed `no-async-promise-executor` anti-pattern in `runJob`
-- `GetDesktopHeroCard.jsx`, `DemoModeBanner.jsx`, `SetupWizard.jsx`: proper error logging replacing empty catch blocks
-- Skipped: Python `is None` "fixes" (report was wrong — `is None` is the PEP-8 idiom)
+- `useCliBridge.js`: removed `no-async-promise-executor` anti-pattern
+- Error-logging in empty catch blocks (GetDesktopHeroCard, DemoModeBanner, SetupWizard)
+
+## Code Quality — Sweep 2 (Feb 2026, iteration_12) — 100 % pass
+- `Sidebar.jsx`: extracted `BrandHeader`, `CreditsWidget`, `BuyCreditsCta`, `NavItem`, `NavList`, `LicenseBadge`
+- `DownloadCliButton.jsx`: extracted `CliTrigger`, `InstallCommand`, `PlatformGrid`, `CliPopover`
+- `DownloadDesktopButton.jsx`: extracted `DesktopTrigger`, `BuildRow`, `DesktopPopover`
+- `GetDesktopHeroCard.jsx`: extracted `ScanLineOverlay`, `HeroInfo`, `HeroActions`
+- `server.py`: split `emergent_session_exchange()` into `_fetch_emergent_profile`, `_upsert_google_user`, `_persist_emergent_session`
+- Added type hints across `backend/tests/test_auth_stripe.py`
+- New regression suite `backend/tests/test_session_refactor.py` (7/7 pass)
+
+## Deliberately Skipped Review Items (false positives)
+- **Python `is None` → `==`** — PEP-8-recommended idiom; changing would be a regression
+- **localStorage "sensitive data"** — dismissal flags only contain the boolean `"1"`, not credentials
+- **Hook deps for stable React setters / imports / function params** — adding these creates infinite re-render loops (this is exactly what broke `AppContext.jsx` on the last attempt)
 
 ## Known Non-Blocking Observations
-- Auto-connect delay after fresh login (~15s) — recurring since iteration 8; users can click Start Scan manually. Fix: gate boot `useEffect` on `AuthContext.loading === false`. Deferred.
+- Auto-connect delay after fresh login (~15s). Users click Start Scan manually. Fix: gate boot `useEffect` on `AuthContext.loading === false`. Deferred.
+- `DownloadCliButton` / `DownloadDesktopButton` popovers don't close on Escape — minor UX polish.
 
 ## Backlog (P1)
-- Gate boot useEffect on AuthContext resolution to make auto-connect fire post-login
+- Gate boot useEffect on AuthContext resolution to enable post-login auto-connect
+- Escape-to-close on download popovers
 - Apple DFU (checkra1n / pongoOS) for legacy iPhones
 - Braiden AI Companion (Claude Sonnet 4.5 floating chat overlay)
 
