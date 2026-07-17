@@ -132,27 +132,29 @@ export function useCliBridge() {
   /**
    * Run a long-lived mtkclient job and stream its output line-by-line.
    *
-   *   runJob("mtk.frp_bypass", {}, (ev) => console.log(ev.line))
+   *   runJob("mtk.frp_bypass", {}, (ev) => pushLog(ev.line))
    *     .then(exit_code => ...)
    */
   const runJob = useCallback((method, params, onEvent) => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const res = await call(method, params);
-        if (!res?.job_id) {
-          reject(new Error(res?.message || "job did not start"));
-          return;
-        }
-        const jobId = res.job_id;
-        jobSubsRef.current.set(jobId, (ev) => {
-          try { onEvent?.(ev); } catch (err) { console.error("[cli-bridge] job onEvent callback threw:", err); }
-          if (ev.stream === "done") {
-            resolve(ev.exit_code);
+    return new Promise((resolve, reject) => {
+      (async () => {
+        try {
+          const res = await call(method, params);
+          if (!res?.job_id) {
+            reject(new Error(res?.message || "job did not start"));
+            return;
           }
-        });
-      } catch (e) {
-        reject(e);
-      }
+          const jobId = res.job_id;
+          jobSubsRef.current.set(jobId, (ev) => {
+            try { onEvent?.(ev); } catch (err) { console.error("[cli-bridge] job onEvent callback threw:", err); }
+            if (ev.stream === "done") {
+              resolve(ev.exit_code);
+            }
+          });
+        } catch (e) {
+          reject(e);
+        }
+      })();
     });
   }, [call]);
 

@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const redirectState = useMemo(() => ({ from: location }), [location]);
 
   if (loading || user === null) {
     return (
@@ -18,7 +19,7 @@ export const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    return <Navigate to="/login" replace state={redirectState} />;
   }
   return children;
 };

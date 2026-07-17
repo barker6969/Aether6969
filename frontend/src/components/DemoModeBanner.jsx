@@ -14,7 +14,8 @@ export const DemoModeBanner = () => {
   const [open, setOpen] = useState(() => {
     try {
       return sessionStorage.getItem(STORAGE_KEY) !== "1";
-    } catch {
+    } catch (e) {
+      console.debug("[DemoModeBanner] sessionStorage read blocked:", e);
       return true;
     }
   });
@@ -23,7 +24,11 @@ export const DemoModeBanner = () => {
   if (!open || cliStatus === "connected") return null;
 
   const dismiss = () => {
-    try { sessionStorage.setItem(STORAGE_KEY, "1"); } catch { /* ignore */ }
+    try {
+      sessionStorage.setItem(STORAGE_KEY, "1");
+    } catch (e) {
+      console.debug("[DemoModeBanner] sessionStorage write blocked:", e);
+    }
     setOpen(false);
   };
 

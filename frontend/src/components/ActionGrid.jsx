@@ -46,6 +46,55 @@ const DEFAULT_ACTIONS = [
   { key: "erase_userdata",    label: "Erase Userdata",      icon: "Eraser",    danger: true,  testid: "action-erase-userdata", cost: "Free" },
 ];
 
+const ActionButton = ({ action, isActive, isDisabled, onClick }) => {
+  const Icon = ICONS[action.icon] || Zap;
+  const hoverClass = action.danger ? "hover:bg-red-500/5" : "hover:bg-[#00FF41]/5";
+  const stateClass = isDisabled ? "opacity-40 cursor-not-allowed" : hoverClass;
+  const activeBg = isActive ? "bg-[#00FF41]/10" : "";
+  const iconBorder = action.danger
+    ? "border-red-500/30 text-red-400 group-hover:border-red-500"
+    : "border-[#00FF41]/30 text-[#00FF41] group-hover:border-[#00FF41]";
+  const costColor = action.cost === "Free" ? "text-[#00FF41]/70" : "text-white/40";
+  const kindLabel = action.danger ? "Destructive" : "Safe op";
+
+  return (
+    <button
+      data-testid={action.testid}
+      disabled={isDisabled}
+      onClick={onClick}
+      className={`group relative bg-[#09090B] p-4 flex flex-col items-start gap-2 transition-colors min-h-[110px] text-left ${stateClass} ${activeBg}`}
+    >
+      <div className="flex items-center justify-between w-full">
+        <div className={`w-9 h-9 border flex items-center justify-center ${iconBorder} transition-colors`}>
+          {isActive ? (
+            <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
+          ) : (
+            <Icon className="w-4 h-4" strokeWidth={2} />
+          )}
+        </div>
+        {action.cost && (
+          <span className={`font-mono text-[9px] tracking-[0.2em] uppercase ${costColor}`}>
+            {action.cost}
+          </span>
+        )}
+      </div>
+      <div className="text-left w-full">
+        <div className="text-white text-sm font-semibold tracking-tight leading-snug">
+          {action.label}
+        </div>
+        <div className="font-mono text-[10px] text-white/40 mt-1 uppercase tracking-[0.15em]">
+          {kindLabel}
+        </div>
+      </div>
+      {isActive && (
+        <span className="absolute top-2 right-2 font-mono text-[9px] text-[#00FF41] tracking-[0.2em]">
+          RUNNING
+        </span>
+      )}
+    </button>
+  );
+};
+
 export const ActionGrid = ({ platform = "MediaTek", actions, title }) => {
   const { runAction, activeAction, status, device, setImeiModalOpen } = useApp();
   const platformOk = !device || device.platform === platform || platform === "ALL";
@@ -63,6 +112,8 @@ export const ActionGrid = ({ platform = "MediaTek", actions, title }) => {
     runAction(a.key, a.label);
   };
 
+  const headerLabel = title || (platform === "ALL" ? "Quick Actions" : `${platform} Operations`);
+
   return (
     <div
       data-testid="action-grid-panel"
@@ -72,7 +123,7 @@ export const ActionGrid = ({ platform = "MediaTek", actions, title }) => {
         <div className="flex items-center gap-2">
           <Zap className="w-3.5 h-3.5 text-[#00FF41]" strokeWidth={2} />
           <span className="font-mono text-[10px] tracking-[0.25em] uppercase text-white/70">
-            {title || (platform === "ALL" ? "Quick Actions" : `${platform} Operations`)}
+            {headerLabel}
           </span>
           <span className="font-mono text-[10px] text-white/30">· {list.length}</span>
         </div>
@@ -84,62 +135,15 @@ export const ActionGrid = ({ platform = "MediaTek", actions, title }) => {
       </div>
 
       <div className={`grid ${cols} gap-px bg-white/5 flex-1`}>
-        {list.map((a) => {
-          const isActive = activeAction === a.label;
-          const isDisabled = disabled || activeAction;
-          const Icon = ICONS[a.icon] || Zap;
-          return (
-            <button
-              key={a.key}
-              data-testid={a.testid}
-              disabled={isDisabled}
-              onClick={() => handleAction(a)}
-              className={`group relative bg-[#09090B] p-4 flex flex-col items-start gap-2 transition-colors min-h-[110px] text-left ${
-                isDisabled
-                  ? "opacity-40 cursor-not-allowed"
-                  : a.danger
-                    ? "hover:bg-red-500/5"
-                    : "hover:bg-[#00FF41]/5"
-              } ${isActive ? "bg-[#00FF41]/10" : ""}`}
-            >
-              <div className="flex items-center justify-between w-full">
-                <div
-                  className={`w-9 h-9 border flex items-center justify-center ${
-                    a.danger
-                      ? "border-red-500/30 text-red-400 group-hover:border-red-500"
-                      : "border-[#00FF41]/30 text-[#00FF41] group-hover:border-[#00FF41]"
-                  } transition-colors`}
-                >
-                  {isActive ? (
-                    <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
-                  ) : (
-                    <Icon className="w-4 h-4" strokeWidth={2} />
-                  )}
-                </div>
-                {a.cost && (
-                  <span className={`font-mono text-[9px] tracking-[0.2em] uppercase ${
-                    a.cost === "Free" ? "text-[#00FF41]/70" : "text-white/40"
-                  }`}>
-                    {a.cost}
-                  </span>
-                )}
-              </div>
-              <div className="text-left w-full">
-                <div className="text-white text-sm font-semibold tracking-tight leading-snug">
-                  {a.label}
-                </div>
-                <div className="font-mono text-[10px] text-white/40 mt-1 uppercase tracking-[0.15em]">
-                  {a.danger ? "Destructive" : "Safe op"}
-                </div>
-              </div>
-              {isActive && (
-                <span className="absolute top-2 right-2 font-mono text-[9px] text-[#00FF41] tracking-[0.2em]">
-                  RUNNING
-                </span>
-              )}
-            </button>
-          );
-        })}
+        {list.map((a) => (
+          <ActionButton
+            key={a.key}
+            action={a}
+            isActive={activeAction === a.label}
+            isDisabled={disabled || !!activeAction}
+            onClick={() => handleAction(a)}
+          />
+        ))}
       </div>
     </div>
   );

@@ -13,7 +13,8 @@ export const GetDesktopHeroCard = () => {
   useEffect(() => {
     try {
       setDismissed(localStorage.getItem(STORAGE_KEY) === "1");
-    } catch (_) {
+    } catch (e) {
+      console.debug("[GetDesktopHeroCard] localStorage read blocked:", e);
       setDismissed(false);
     }
   }, []);
@@ -21,7 +22,9 @@ export const GetDesktopHeroCard = () => {
   const dismiss = () => {
     try {
       localStorage.setItem(STORAGE_KEY, "1");
-    } catch (_) { /* localStorage blocked — non-fatal */ }
+    } catch (e) {
+      console.debug("[GetDesktopHeroCard] localStorage write blocked:", e);
+    }
     setDismissed(true);
   };
 

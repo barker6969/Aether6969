@@ -29,6 +29,72 @@ const PLANS = [
   },
 ];
 
+const PlanCard = ({ plan, isBusy, disabled, onClick }) => {
+  const Icon = plan.icon;
+  const wrapperCls = plan.featured
+    ? "border-[#00FF41] bg-[#00FF41]/5 hover:bg-[#00FF41]/10"
+    : "border-white/15 hover:border-[#00FF41]/40 hover:bg-[#00FF41]/5";
+  const iconCls = plan.featured ? "text-[#00FF41]" : "text-white/70";
+  const priceCls = plan.featured ? "text-[#00FF41]" : "text-white";
+  const ctaCls = plan.featured
+    ? "bg-[#00FF41] text-black font-semibold"
+    : "border border-white/15 text-white group-hover:border-[#00FF41]/40 group-hover:text-[#00FF41]";
+
+  return (
+    <button
+      data-testid={`buy-plan-${plan.tier_id}`}
+      onClick={onClick}
+      disabled={disabled}
+      className={`group text-left p-5 border transition-colors disabled:opacity-50 ${wrapperCls}`}
+    >
+      <div className="flex items-start justify-between mb-3">
+        <Icon className={`w-6 h-6 ${iconCls}`} strokeWidth={1.8} />
+        {plan.featured && (
+          <span className="font-mono text-[9px] tracking-[0.25em] uppercase bg-[#00FF41] text-black px-1.5 py-0.5 font-semibold">
+            Best Value
+          </span>
+        )}
+      </div>
+      <div className="text-base font-semibold text-white">{plan.label}</div>
+      <div className="font-mono text-[11px] text-white/40 mt-1 leading-snug">{plan.desc}</div>
+      <div className="flex items-baseline gap-1 mt-3">
+        <span className={`text-2xl font-bold ${priceCls} font-mono`}>${plan.price}</span>
+        <span className="text-xs text-white/40 font-mono">{plan.cycle}</span>
+      </div>
+      <div className={`mt-3 h-9 flex items-center justify-center gap-1.5 font-mono text-[10px] tracking-[0.22em] uppercase ${ctaCls}`}>
+        {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRight className="w-3.5 h-3.5" />}
+        {isBusy ? "Redirecting ..." : "Checkout"}
+      </div>
+    </button>
+  );
+};
+
+const PackCard = ({ pack, isBusy, disabled, onClick }) => (
+  <button
+    data-testid={`buy-pack-${pack.tier_id}`}
+    disabled={disabled}
+    onClick={onClick}
+    className="text-left bg-[#09090B] p-4 flex flex-col gap-2 hover:bg-[#00FF41]/5 transition-colors disabled:opacity-50 relative"
+  >
+    {pack.popular && (
+      <span className="absolute top-2 right-2 font-mono text-[9px] tracking-[0.2em] uppercase bg-[#00FF41]/15 text-[#00FF41] px-1.5 py-0.5">
+        Popular
+      </span>
+    )}
+    <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/40">
+      {pack.label}
+    </div>
+    <div className="flex items-baseline gap-1">
+      <span className="text-xl font-bold text-[#00FF41] font-mono">+{pack.credits}</span>
+      <span className="text-[10px] text-white/40 font-mono">CR</span>
+    </div>
+    <div className="text-sm text-white/70">${pack.price}</div>
+    <div className="mt-1 h-8 flex items-center justify-center font-mono text-[10px] tracking-[0.22em] uppercase border border-[#00FF41]/30 text-[#00FF41]">
+      {isBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : "Buy"}
+    </div>
+  </button>
+);
+
 export const BuyCreditsModal = ({ open, onClose }) => {
   const { http, user } = useAuth();
   const [busy, setBusy] = useState(null); // tier_id while creating session
@@ -77,94 +143,37 @@ export const BuyCreditsModal = ({ open, onClose }) => {
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Plans */}
           <div>
             <div className="font-mono text-[10px] tracking-[0.25em] uppercase text-white/40 mb-3">
               License plans
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {PLANS.map((p) => {
-                const Icon = p.icon;
-                const isBusy = busy === p.tier_id;
-                return (
-                  <button
-                    key={p.tier_id}
-                    data-testid={`buy-plan-${p.tier_id}`}
-                    onClick={() => startCheckout(p.tier_id)}
-                    disabled={!!busy}
-                    className={`group text-left p-5 border transition-colors disabled:opacity-50 ${
-                      p.featured
-                        ? "border-[#00FF41] bg-[#00FF41]/5 hover:bg-[#00FF41]/10"
-                        : "border-white/15 hover:border-[#00FF41]/40 hover:bg-[#00FF41]/5"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <Icon className={`w-6 h-6 ${p.featured ? "text-[#00FF41]" : "text-white/70"}`} strokeWidth={1.8} />
-                      {p.featured && (
-                        <span className="font-mono text-[9px] tracking-[0.25em] uppercase bg-[#00FF41] text-black px-1.5 py-0.5 font-semibold">
-                          Best Value
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-base font-semibold text-white">{p.label}</div>
-                    <div className="font-mono text-[11px] text-white/40 mt-1 leading-snug">{p.desc}</div>
-                    <div className="flex items-baseline gap-1 mt-3">
-                      <span className={`text-2xl font-bold ${p.featured ? "text-[#00FF41]" : "text-white"} font-mono`}>
-                        ${p.price}
-                      </span>
-                      <span className="text-xs text-white/40 font-mono">{p.cycle}</span>
-                    </div>
-                    <div
-                      className={`mt-3 h-9 flex items-center justify-center gap-1.5 font-mono text-[10px] tracking-[0.22em] uppercase ${
-                        p.featured
-                          ? "bg-[#00FF41] text-black font-semibold"
-                          : "border border-white/15 text-white group-hover:border-[#00FF41]/40 group-hover:text-[#00FF41]"
-                      }`}
-                    >
-                      {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRight className="w-3.5 h-3.5" />}
-                      {isBusy ? "Redirecting ..." : "Checkout"}
-                    </div>
-                  </button>
-                );
-              })}
+              {PLANS.map((p) => (
+                <PlanCard
+                  key={p.tier_id}
+                  plan={p}
+                  isBusy={busy === p.tier_id}
+                  disabled={!!busy}
+                  onClick={() => startCheckout(p.tier_id)}
+                />
+              ))}
             </div>
           </div>
 
-          {/* Credit packs */}
           <div>
             <div className="font-mono text-[10px] tracking-[0.25em] uppercase text-white/40 mb-3">
               Credit top-up packs
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5">
-              {PACKS.map((pack) => {
-                const isBusy = busy === pack.tier_id;
-                return (
-                  <button
-                    key={pack.tier_id}
-                    data-testid={`buy-pack-${pack.tier_id}`}
-                    disabled={!!busy}
-                    onClick={() => startCheckout(pack.tier_id)}
-                    className="text-left bg-[#09090B] p-4 flex flex-col gap-2 hover:bg-[#00FF41]/5 transition-colors disabled:opacity-50 relative"
-                  >
-                    {pack.popular && (
-                      <span className="absolute top-2 right-2 font-mono text-[9px] tracking-[0.2em] uppercase bg-[#00FF41]/15 text-[#00FF41] px-1.5 py-0.5">
-                        Popular
-                      </span>
-                    )}
-                    <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/40">
-                      {pack.label}
-                    </div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-xl font-bold text-[#00FF41] font-mono">+{pack.credits}</span>
-                      <span className="text-[10px] text-white/40 font-mono">CR</span>
-                    </div>
-                    <div className="text-sm text-white/70">${pack.price}</div>
-                    <div className="mt-1 h-8 flex items-center justify-center font-mono text-[10px] tracking-[0.22em] uppercase border border-[#00FF41]/30 text-[#00FF41]">
-                      {isBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : "Buy"}
-                    </div>
-                  </button>
-                );
-              })}
+              {PACKS.map((pack) => (
+                <PackCard
+                  key={pack.tier_id}
+                  pack={pack}
+                  isBusy={busy === pack.tier_id}
+                  disabled={!!busy}
+                  onClick={() => startCheckout(pack.tier_id)}
+                />
+              ))}
             </div>
           </div>
 

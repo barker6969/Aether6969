@@ -54,8 +54,8 @@ const CopyButton = ({ text, testid }) => {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* clipboard blocked (non-secure ctx) — user can select manually */
+    } catch (e) {
+      console.debug("[SetupWizard] clipboard blocked:", e);
     }
   };
   return (
