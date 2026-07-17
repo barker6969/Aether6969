@@ -292,13 +292,8 @@ async def me(user=Depends(get_current_user)):
     return public_user(user)
 
 
-@api_router.post("/auth/session")
-async def emergent_session_exchange(request: Request, response: Response):
-    """Exchange Emergent OAuth session_id for a session_token cookie."""
-    body = await request.json()
-    session_id = body.get("session_id") if isinstance(body, dict) else None
-    if not session_id:
-        raise HTTPException(status_code=400, detail="session_id required")
+async def _fetch_emergent_profile(session_id: str) -> Dict[str, Any]:
+    """Call Emergent oauth data endpoint; validate response contract."""
     async with httpx.AsyncClient(timeout=15) as http:
         r = await http.get(EMERGENT_SESSION_DATA_URL, headers={"X-Session-ID": session_id})
     if r.status_code != 200:
@@ -307,15 +302,21 @@ async def emergent_session_exchange(request: Request, response: Response):
     email = (data.get("email") or "").lower().strip()
     if not email:
         raise HTTPException(status_code=400, detail="Email missing from oauth payload")
+    data["email"] = email
+    return data
 
+
+async def _upsert_google_user(profile: Dict[str, Any]) -> Dict[str, Any]:
+    """Create a Google-sourced user if missing, otherwise refresh name/picture."""
+    email = profile["email"]
     user = await db.users.find_one({"email": email})
-    if not user:
+    if user is None:
         user_id = f"user_{uuid.uuid4().hex[:12]}"
         user_doc = {
             "user_id": user_id,
             "email": email,
-            "name": data.get("name") or email.split("@")[0],
-            "picture": data.get("picture"),
+            "name": profile.get("name") or email.split("@")[0],
+            "picture": profile.get("picture"),
             "role": "user",
             "plan": "free",
             "credits": 100,
@@ -323,32 +324,46 @@ async def emergent_session_exchange(request: Request, response: Response):
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         await db.users.insert_one(user_doc)
-        user = user_doc
-    else:
-        # update picture/name if changed
-        await db.users.update_one(
-            {"user_id": user["user_id"]},
-            {"$set": {"name": data.get("name") or user.get("name"), "picture": data.get("picture")}},
-        )
+        return user_doc
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"name": profile.get("name") or user.get("name"), "picture": profile.get("picture")}},
+    )
+    return user
 
+
+async def _persist_emergent_session(user: Dict[str, Any], session_token: str, response: Response) -> None:
+    """Insert user_sessions row and set the httpOnly session_token cookie."""
     expires_at = (datetime.now(timezone.utc) + timedelta(days=EMERGENT_SESSION_TTL_DAYS)).isoformat()
     await db.user_sessions.insert_one(
         {
             "user_id": user["user_id"],
-            "session_token": data["session_token"],
+            "session_token": session_token,
             "expires_at": expires_at,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
     )
     response.set_cookie(
         key="session_token",
-        value=data["session_token"],
+        value=session_token,
         httponly=True,
         secure=True,
         samesite="none",
         max_age=EMERGENT_SESSION_TTL_DAYS * 86400,
         path="/",
     )
+
+
+@api_router.post("/auth/session")
+async def emergent_session_exchange(request: Request, response: Response):
+    """Exchange Emergent OAuth session_id for a session_token cookie."""
+    body = await request.json()
+    session_id = body.get("session_id") if isinstance(body, dict) else None
+    if not session_id:
+        raise HTTPException(status_code=400, detail="session_id required")
+    profile = await _fetch_emergent_profile(session_id)
+    user = await _upsert_google_user(profile)
+    await _persist_emergent_session(user, profile["session_token"], response)
     return public_user(user)
 
 
