@@ -266,7 +266,10 @@ export const AppProvider = ({ children }) => {
       timersRef.current.push(t);
     }
     return () => clearTimers();
-    // Boot must run exactly once; bootedRef guards re-entry.
+    // Boot must run exactly once; bootedRef guards re-entry. Empty deps
+    // are intentional — adding pushLog/startSearch would fire the cleanup
+    // (clearTimers) on every state change and kill the boot sequence.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const value = {

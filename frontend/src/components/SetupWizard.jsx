@@ -28,6 +28,16 @@ const detectOS = () => {
 
 const OS_LABELS = { windows: "Windows", macos: "macOS", linux: "Linux" };
 
+const computeDepState = (connected, value) => {
+  if (!connected) return "unknown";
+  return value ? "ok" : "missing";
+};
+
+const computeCliVersionLabel = (connected, cliVersion) => {
+  if (!connected) return undefined;
+  return cliVersion ? `v${cliVersion}` : "LIVE";
+};
+
 const overallStatusCls = (allReady, connected) => {
   if (allReady) return "text-[#00FF41] border-[#00FF41]/40 bg-[#00FF41]/5";
   if (connected) return "text-yellow-400 border-yellow-400/40 bg-yellow-400/5";
@@ -193,16 +203,6 @@ export const SetupWizard = () => {
   const info = live || bridge.info || {};
   const cliVersion = bridge.info?.version;
 
-  const depState = (value) => {
-    if (!connected) return "unknown";
-    return value ? "ok" : "missing";
-  };
-
-  const cliVersionLabel = () => {
-    if (!connected) return undefined;
-    return cliVersion ? `v${cliVersion}` : "LIVE";
-  };
-
   const deps = useMemo(
     () => [
       {
@@ -211,7 +211,7 @@ export const SetupWizard = () => {
         name: "Aether CLI bridge",
         subtitle: "Rust binary · connects the dashboard to real USB hardware",
         state: connected ? "ok" : "missing",
-        version: cliVersionLabel(),
+        version: computeCliVersionLabel(connected, cliVersion),
         required: true,
       },
       {
@@ -219,7 +219,7 @@ export const SetupWizard = () => {
         icon: Cpu,
         name: "mtkclient (MediaTek)",
         subtitle: "Python BROM/DA exploit suite · powers MTK operations",
-        state: depState(info.mtkclient),
+        state: computeDepState(connected, info.mtkclient),
         version: info.mtkclient || undefined,
         note: info.python ? `Python detected: ${info.python}` : "Requires Python 3.8+",
       },
@@ -228,7 +228,7 @@ export const SetupWizard = () => {
         icon: Smartphone,
         name: "Heimdall (Samsung)",
         subtitle: "Odin/Loke protocol tool · powers Samsung operations",
-        state: depState(info.heimdall),
+        state: computeDepState(connected, info.heimdall),
         version: info.heimdall || undefined,
       },
     ],
