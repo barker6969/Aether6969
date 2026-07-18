@@ -28,6 +28,18 @@ const detectOS = () => {
 
 const OS_LABELS = { windows: "Windows", macos: "macOS", linux: "Linux" };
 
+const overallStatusCls = (allReady, connected) => {
+  if (allReady) return "text-[#00FF41] border-[#00FF41]/40 bg-[#00FF41]/5";
+  if (connected) return "text-yellow-400 border-yellow-400/40 bg-yellow-400/5";
+  return "text-white/50 border-white/15";
+};
+
+const overallStatusLabel = (allReady, connected) => {
+  if (allReady) return "All set";
+  if (connected) return "Action needed";
+  return "CLI offline";
+};
+
 // OS-specific install commands per dependency.
 const CMDS = {
   cli: {
@@ -181,7 +193,15 @@ export const SetupWizard = () => {
   const info = live || bridge.info || {};
   const cliVersion = bridge.info?.version;
 
-  const depState = (value) => (!connected ? "unknown" : value ? "ok" : "missing");
+  const depState = (value) => {
+    if (!connected) return "unknown";
+    return value ? "ok" : "missing";
+  };
+
+  const cliVersionLabel = () => {
+    if (!connected) return undefined;
+    return cliVersion ? `v${cliVersion}` : "LIVE";
+  };
 
   const deps = useMemo(
     () => [
@@ -191,7 +211,7 @@ export const SetupWizard = () => {
         name: "Aether CLI bridge",
         subtitle: "Rust binary · connects the dashboard to real USB hardware",
         state: connected ? "ok" : "missing",
-        version: connected ? (cliVersion ? `v${cliVersion}` : "LIVE") : undefined,
+        version: cliVersionLabel(),
         required: true,
       },
       {
@@ -290,15 +310,9 @@ export const SetupWizard = () => {
           </div>
           <span
             data-testid="setup-overall-status"
-            className={`font-mono text-[10px] tracking-[0.18em] uppercase px-2.5 py-1 border ${
-              allReady
-                ? "text-[#00FF41] border-[#00FF41]/40 bg-[#00FF41]/5"
-                : connected
-                  ? "text-yellow-400 border-yellow-400/40 bg-yellow-400/5"
-                  : "text-white/50 border-white/15"
-            }`}
+            className={`font-mono text-[10px] tracking-[0.18em] uppercase px-2.5 py-1 border ${overallStatusCls(allReady, connected)}`}
           >
-            {allReady ? "All set" : connected ? "Action needed" : "CLI offline"}
+            {overallStatusLabel(allReady, connected)}
           </span>
         </div>
 

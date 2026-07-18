@@ -2,6 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { useCliBridge } from "../hooks/useCliBridge";
 
+const CLI_TEXT = {
+  connected: (v) => `CLI · live v${v ?? "?"}`,
+  connecting: () => "CLI · connecting",
+  offline: () => "CLI · offline",
+};
+
+const resolveCliText = (enabled, status, info) => {
+  if (!enabled) return "CLI · disabled (demo)";
+  const fn = CLI_TEXT[status] || CLI_TEXT.offline;
+  return fn(info?.version);
+};
+
 export const StatusBar = () => {
   const { status, device, comPort, logs } = useApp();
   const { status: cliStatus, info: cliInfo, enabled: cliEnabled } = useCliBridge();
@@ -25,13 +37,7 @@ export const StatusBar = () => {
     connected: "bg-[#00FF41] animate-pulse-glow",
   }[cliStatus];
 
-  const cliText = !cliEnabled
-    ? "CLI · disabled (demo)"
-    : cliStatus === "connected"
-      ? `CLI · live v${cliInfo?.version ?? "?"}`
-      : cliStatus === "connecting"
-        ? "CLI · connecting"
-        : "CLI · offline";
+  const cliText = resolveCliText(cliEnabled, cliStatus, cliInfo);
 
   return (
     <div

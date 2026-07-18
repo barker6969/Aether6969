@@ -11,13 +11,13 @@ import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL").rstrip("/")
-ADMIN_EMAIL = "admin@aether.dev"
-ADMIN_PASSWORD = "aether_admin_2026"
+BASE_URL: str = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
+ADMIN_EMAIL: str = os.environ.get("AETHER_TEST_ADMIN_EMAIL", "admin@aether.dev")
+ADMIN_PASSWORD: str = os.environ.get("AETHER_TEST_ADMIN_PASSWORD", "aether_admin_2026")
 
 
 @pytest.fixture
-def api_client():
+def api_client() -> requests.Session:
     s = requests.Session()
     s.headers.update({"Content-Type": "application/json"})
     return s
@@ -25,21 +25,21 @@ def api_client():
 
 # ── Auth session endpoint (refactored) ────────────────────────────────────
 class TestAuthSessionRefactor:
-    def test_root_alive(self, api_client):
+    def test_root_alive(self, api_client: requests.Session) -> None:
         r = api_client.get(f"{BASE_URL}/api/")
         assert r.status_code == 200
 
-    def test_session_empty_body_returns_400(self, api_client):
+    def test_session_empty_body_returns_400(self, api_client: requests.Session) -> None:
         r = api_client.post(f"{BASE_URL}/api/auth/session", data="{}")
         assert r.status_code == 400
         detail = r.json().get("detail", "")
         assert "session_id" in detail.lower()
 
-    def test_session_missing_session_id_returns_400(self, api_client):
+    def test_session_missing_session_id_returns_400(self, api_client: requests.Session) -> None:
         r = api_client.post(f"{BASE_URL}/api/auth/session", json={"other": "x"})
         assert r.status_code == 400
 
-    def test_session_invalid_session_id_returns_401(self, api_client):
+    def test_session_invalid_session_id_returns_401(self, api_client: requests.Session) -> None:
         r = api_client.post(
             f"{BASE_URL}/api/auth/session",
             json={"session_id": "definitely-not-a-real-session-id-xyz"},
@@ -52,7 +52,7 @@ class TestAuthSessionRefactor:
 
 # ── Smoke test — the rest of auth must still work post-refactor ───────────
 class TestAdminAuthSmoke:
-    def test_admin_login_returns_200_with_user(self, api_client):
+    def test_admin_login_returns_200_with_user(self, api_client: requests.Session) -> None:
         r = api_client.post(
             f"{BASE_URL}/api/auth/login",
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
@@ -66,7 +66,7 @@ class TestAdminAuthSmoke:
         # httpOnly access_token cookie should be set
         assert "access_token" in r.cookies
 
-    def test_me_endpoint_with_cookie_after_login(self, api_client):
+    def test_me_endpoint_with_cookie_after_login(self, api_client: requests.Session) -> None:
         login = api_client.post(
             f"{BASE_URL}/api/auth/login",
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
@@ -77,7 +77,7 @@ class TestAdminAuthSmoke:
         assert me.status_code == 200
         assert me.json().get("email") == ADMIN_EMAIL
 
-    def test_me_unauthenticated_returns_401(self, api_client):
+    def test_me_unauthenticated_returns_401(self, api_client: requests.Session) -> None:
         fresh = requests.Session()
         r = fresh.get(f"{BASE_URL}/api/auth/me")
         assert r.status_code == 401
