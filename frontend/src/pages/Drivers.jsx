@@ -121,7 +121,7 @@ export default function Drivers() {
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white">Drivers &amp; Tools</h1>
             <p className="text-sm text-white/50 mt-1 max-w-2xl">
               Every USB driver and flashing tool you need to connect a real device — chipset drivers,
-              per-brand OEM drivers, and the adb/fastboot + WinUSB tooling. Downloads open on the vendor's page.
+              per-brand OEM drivers, and the adb/fastboot + WinUSB tooling. Downloads open on the vendor&apos;s page.
             </p>
           </div>
         </div>
@@ -164,7 +164,7 @@ export default function Drivers() {
         </div>
         {filtered.length === 0 && (
           <div data-testid="drivers-empty" className="text-center py-16 font-mono text-sm text-white/40">
-            No drivers match "{query}".
+            No drivers match &quot;{query}&quot;.
           </div>
         )}
 

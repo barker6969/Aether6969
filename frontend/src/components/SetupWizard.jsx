@@ -212,7 +212,6 @@ export const SetupWizard = () => {
         version: info.heimdall || undefined,
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [connected, cliVersion, info.mtkclient, info.heimdall, info.python]
   );
 
@@ -270,8 +269,7 @@ export const SetupWizard = () => {
         console.debug("[setup-wizard] autoshow flag unavailable:", e);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, bridge.info]);
+  }, [connected, bridge.info, setSetupOpen]);
 
   return (
     <Dialog open={setupOpen} onOpenChange={setSetupOpen}>
@@ -310,7 +308,7 @@ export const SetupWizard = () => {
             data-testid="setup-cli-offline-hint"
             className="mx-6 mt-4 bg-yellow-400/5 border border-yellow-400/30 px-4 py-3 font-mono text-[11px] text-yellow-200/80 leading-relaxed"
           >
-            The Aether CLI bridge isn't running, so dependency versions can't be auto-detected.
+            The Aether CLI bridge isn&apos;t running, so dependency versions can&apos;t be auto-detected.
             Install the CLI, run <code className="bg-black/50 px-1 text-[#00FF41]">aether-cli serve</code>,
             then reload the dashboard. Manual install commands for each tool are shown below.
           </div>
