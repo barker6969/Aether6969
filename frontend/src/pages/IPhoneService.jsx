@@ -35,7 +35,7 @@ export default function IPhoneService() {
   };
 
   return (
-    <div data-testid="iphone-page" className="h-full flex flex-col gap-3 p-4 overflow-hidden">
+    <div data-testid="iphone-page" className="h-full flex flex-col gap-3 p-4 overflow-y-auto">
       <div className="bg-[#09090B] border border-white/10 p-5 flex items-center gap-4 flex-shrink-0 relative overflow-hidden">
         <div className="absolute -right-10 -top-10 w-44 h-44 opacity-[0.04] pointer-events-none">
           <img src={LOGO_URL} alt="" className="w-full h-full object-contain" />

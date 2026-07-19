@@ -27,7 +27,7 @@ export default function SamsungService() {
   const heimdallReady = cliBridge?.info?.heimdall;
 
   return (
-    <div data-testid="samsung-page" className="h-full flex flex-col gap-3 p-4 overflow-hidden">
+    <div data-testid="samsung-page" className="h-full flex flex-col gap-3 p-4 overflow-y-auto">
       {/* Header */}
       <div className="bg-[#09090B] border border-white/10 p-5 flex items-center gap-4 flex-shrink-0">
         <div className="w-12 h-12 border border-[#1f5fdb]/40 bg-[#1f5fdb]/10 flex items-center justify-center">

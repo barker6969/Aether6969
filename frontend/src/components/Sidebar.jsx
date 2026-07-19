@@ -124,6 +124,20 @@ const LicenseBadge = ({ plan }) => (
   </div>
 );
 
+const AuthorCredit = () => (
+  <a
+    href="https://github.com/braidenbarker"
+    target="_blank"
+    rel="noreferrer"
+    data-testid="sidebar-author-credit"
+    className="group border-t border-white/5 px-4 py-2 flex items-center justify-between font-mono text-[9px] tracking-[0.25em] uppercase text-white/25 hover:text-[#00FF41] hover:bg-[#00FF41]/[0.03] transition-colors"
+    title="View creator on GitHub"
+  >
+    <span>Made by</span>
+    <span className="text-white/40 group-hover:text-[#00FF41]">Braiden&nbsp;Barker</span>
+  </a>
+);
+
 export const Sidebar = () => {
   const { user } = useAuth();
   const localCredits = useApp().credits;
@@ -176,6 +190,7 @@ export const Sidebar = () => {
         <BuyCreditsCta onClick={() => setBuyOpen(true)} />
         <NavList />
         <LicenseBadge plan={user?.plan} />
+        <AuthorCredit />
         <UserProfile />
       </aside>
 

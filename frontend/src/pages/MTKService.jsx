@@ -22,7 +22,7 @@ export default function MTKService() {
   const matches = device && device.platform === "MediaTek";
 
   return (
-    <div data-testid="mtk-page" className="h-full flex flex-col gap-3 p-4 overflow-hidden">
+    <div data-testid="mtk-page" className="h-full flex flex-col gap-3 p-4 overflow-y-auto">
       {/* Header */}
       <div className="bg-[#09090B] border border-white/10 p-5 flex items-center gap-4 flex-shrink-0">
         <div className="w-12 h-12 border border-[#00FF41]/40 bg-[#00FF41]/5 flex items-center justify-center">

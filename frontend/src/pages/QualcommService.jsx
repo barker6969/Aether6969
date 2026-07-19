@@ -21,7 +21,7 @@ export default function QualcommService() {
   const matches = device && device.platform === "Qualcomm";
 
   return (
-    <div data-testid="qualcomm-page" className="h-full flex flex-col gap-3 p-4 overflow-hidden">
+    <div data-testid="qualcomm-page" className="h-full flex flex-col gap-3 p-4 overflow-y-auto">
       <div className="bg-[#09090B] border border-white/10 p-5 flex items-center gap-4 flex-shrink-0">
         <div className="w-12 h-12 border border-[#00FF41]/40 bg-[#00FF41]/5 flex items-center justify-center">
           <Radio className="w-6 h-6 text-[#00FF41]" strokeWidth={1.8} />
