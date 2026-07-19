@@ -7,8 +7,9 @@ import { CloudExploitDB } from "../components/CloudExploitDB";
 import { FoundingBuilderBanner } from "../components/FoundingBuilderBanner";
 import { DemoModeBanner } from "../components/DemoModeBanner";
 import { GetDesktopHeroCard } from "../components/GetDesktopHeroCard";
+import { AuthorCreditStrip } from "../components/AuthorCreditStrip";
 import { useApp } from "../context/AppContext";
-import { Activity, Database, ShieldCheck, Wifi, Github } from "lucide-react";
+import { Activity, Database, ShieldCheck, Wifi } from "lucide-react";
 
 const Stat = ({ label, value, icon: Icon, accent = false }) => (
   <div className="bg-[#09090B] border border-white/10 px-4 py-3 flex items-center gap-3">
@@ -93,36 +94,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Author credit strip — Made by Braiden Barker */}
-      <div
-        data-testid="dashboard-author-credit"
-        className="flex-shrink-0 flex items-center justify-between gap-3 px-4 py-2 border border-white/5 bg-[#09090B]/60 backdrop-blur-sm"
-      >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span className="w-1.5 h-1.5 bg-[#00FF41] animate-pulse-glow flex-shrink-0" />
-          <span className="font-mono text-[10px] tracking-[0.3em] uppercase text-white/40 truncate">
-            Aether Repair Suite · crafted with obsession by
-          </span>
-          <a
-            href="https://github.com/braidenbarker"
-            target="_blank"
-            rel="noreferrer"
-            className="font-mono text-[10px] tracking-[0.28em] uppercase text-[#00FF41] hover:text-white transition-colors font-semibold whitespace-nowrap"
-          >
-            Braiden&nbsp;Barker
-          </a>
-        </div>
-        <a
-          href="https://github.com/braidenbarker"
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-1.5 font-mono text-[9px] tracking-[0.28em] uppercase text-white/30 hover:text-[#00FF41] transition-colors flex-shrink-0"
-          title="GitHub"
-        >
-          <Github className="w-3 h-3" />
-          <span className="hidden sm:inline">braidenbarker</span>
-        </a>
-      </div>
+      {/* Author credit strip — Made by Braiden Barker + rotating trust signals */}
+      <AuthorCreditStrip />
     </div>
   );
 }
