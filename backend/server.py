@@ -41,6 +41,7 @@ EMERGENT_SESSION_DATA_URL = "https://demobackend.emergentagent.com/auth/v1/env/o
 PRICING_TIERS = {
     "solo_annual":      {"amount": 89.00,  "label": "Solo Builder Edition (1 year)",   "grant_plan": "solo",             "grant_credits": 50},
     "founding_lifetime": {"amount": 299.00, "label": "Founding Builder · Lifetime",     "grant_plan": "founding_builder", "grant_credits": 500},
+    "credits_impulse":  {"amount": 9.00,   "label": "Impulse · +15 credits",            "grant_plan": None,               "grant_credits": 15},
     "credits_starter":  {"amount": 19.00,  "label": "Starter · +50 credits",            "grant_plan": None,               "grant_credits": 50},
     "credits_builder":  {"amount": 49.00,  "label": "Builder · +150 credits",           "grant_plan": None,               "grant_credits": 150},
     "credits_workshop": {"amount": 149.00, "label": "Workshop · +500 credits",          "grant_plan": None,               "grant_credits": 500},

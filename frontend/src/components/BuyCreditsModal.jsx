@@ -3,6 +3,7 @@ import { useAuth, formatApiError } from "../context/AuthContext";
 import { X, Loader2, Coins, Crown, ShieldCheck, ArrowRight, Infinity as InfinityIcon } from "lucide-react";
 
 const PACKS = [
+  { tier_id: "credits_impulse",  price: 9,   credits: 15,   label: "Impulse", tagline: "1 op = $0.60" },
   { tier_id: "credits_starter",  price: 19,  credits: 50,   label: "Starter" },
   { tier_id: "credits_builder",  price: 49,  credits: 150,  label: "Builder", popular: true },
   { tier_id: "credits_workshop", price: 149, credits: 500,  label: "Workshop" },
@@ -89,6 +90,11 @@ const PackCard = ({ pack, isBusy, disabled, onClick }) => (
       <span className="text-[10px] text-white/40 font-mono">CR</span>
     </div>
     <div className="text-sm text-white/70">${pack.price}</div>
+    {pack.tagline && (
+      <div className="font-mono text-[9px] tracking-[0.18em] uppercase text-white/40">
+        {pack.tagline}
+      </div>
+    )}
     <div className="mt-1 h-8 flex items-center justify-center font-mono text-[10px] tracking-[0.22em] uppercase border border-[#00FF41]/30 text-[#00FF41]">
       {isBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : "Buy"}
     </div>
@@ -164,7 +170,7 @@ export const BuyCreditsModal = ({ open, onClose }) => {
             <div className="font-mono text-[10px] tracking-[0.25em] uppercase text-white/40 mb-3">
               Credit top-up packs
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-white/5">
               {PACKS.map((pack) => (
                 <PackCard
                   key={pack.tier_id}

@@ -256,8 +256,9 @@ export default function Pricing() {
             Credit Top-up Packs
           </span>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-white/5">
           {[
+            { credits: 15, price: 9, label: "Impulse", tagline: "1 op = $0.60" },
             { credits: 50, price: 19, label: "Starter" },
             { credits: 150, price: 49, label: "Builder", popular: true },
             { credits: 500, price: 149, label: "Workshop" },
@@ -280,6 +281,11 @@ export default function Pricing() {
                 <span className="text-xs text-white/40 font-mono">CR</span>
               </div>
               <div className="text-sm text-white/70">${pack.price} USD</div>
+              {pack.tagline && (
+                <div className="font-mono text-[9px] tracking-[0.18em] uppercase text-white/40">
+                  {pack.tagline}
+                </div>
+              )}
               <button
                 data-testid={`topup-${pack.credits}`}
                 onClick={() => topUp(pack.credits)}
