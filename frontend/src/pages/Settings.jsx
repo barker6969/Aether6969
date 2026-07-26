@@ -1,6 +1,7 @@
 import React from "react";
 import { useApp } from "../context/AppContext";
 import { Settings as SettingsIcon, ShieldCheck, Bell, Usb, Database, Info, Wrench, Terminal } from "lucide-react";
+import DeployStatus from "../components/DeployStatus";
 
 const Toggle = ({ checked, onChange, testid }) => (
   <button
@@ -146,6 +147,8 @@ export default function Settings() {
             }
           />
         </div>
+
+        <DeployStatus />
 
         <div className="bg-[#09090B] border border-white/10 lg:col-span-2">
           <div className="px-4 py-3 border-b border-white/10 font-mono text-[10px] tracking-[0.25em] uppercase text-white/50">
