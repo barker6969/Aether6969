@@ -533,12 +533,10 @@ FOUNDER_ACCOUNTS = [
         "email_env": "BRAIDEN_EMAIL",   "email_default": "braiden@aether.dev",
         "pw_env":    "BRAIDEN_PASSWORD","pw_default":    "founder_braiden_2026",
     },
-    {
-        "name": "Byron Thompson",
-        "email_env": "BYRON_EMAIL",     "email_default": "byron@aether.dev",
-        "pw_env":    "BYRON_PASSWORD",  "pw_default":    "founder_byron_2026",
-    },
 ]
+
+# Accounts to strip of founder/admin access on startup (demoted to standard users).
+DEMOTED_FOUNDER_EMAILS = ["byron@aether.dev"]
 
 
 async def seed_admin():
@@ -620,6 +618,15 @@ async def on_startup():
     await db.payment_transactions.create_index("session_id", unique=True)
     await seed_admin()
     await seed_founders()
+    # Demote any accounts removed from the founder list (revoke admin + founder flag).
+    for demoted_email in DEMOTED_FOUNDER_EMAILS:
+        existing = await db.users.find_one({"email": demoted_email})
+        if existing is not None:
+            await db.users.update_one(
+                {"email": demoted_email},
+                {"$set": {"role": "user", "founder": False}},
+            )
+            logger.info(f"Demoted former founder account: {demoted_email}")
     # Also promote your existing accounts (if you've already signed up with a real email)
     # to founder status so you don't have to switch accounts.
     for real_email in ["braidenbarker5@gmail.com"]:
