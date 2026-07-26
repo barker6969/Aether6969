@@ -517,9 +517,68 @@ async def stripe_webhook(request: Request):
 # ────────────────────────────────────────────────────────────────────────────
 # Misc routes
 # ────────────────────────────────────────────────────────────────────────────
+APP_VERSION = "4.7.2"
+# Captured at import time so it reflects the deployed build, not the request time.
+BOOT_TIME = datetime.now(timezone.utc)
+
+
+def _build_commit() -> str:
+    """Best-effort git short SHA of the deployed build. Falls back to 'unknown'."""
+    sha = os.environ.get("GIT_COMMIT") or os.environ.get("BUILD_SHA")
+    if sha:
+        return sha[:7]
+    try:
+        head = (ROOT_DIR.parent / ".git" / "HEAD").read_text().strip()
+        if head.startswith("ref:"):
+            ref_path = ROOT_DIR.parent / ".git" / head.split(" ", 1)[1]
+            return ref_path.read_text().strip()[:7]
+        return head[:7]
+    except Exception:
+        return "unknown"
+
+
+BUILD_COMMIT = _build_commit()
+
+
 @api_router.get("/")
 async def root():
-    return {"message": "Aether API online", "version": "4.7.2"}
+    return {"message": "Aether API online", "version": APP_VERSION}
+
+
+@api_router.get("/health")
+async def health():
+    """Liveness + Mongo readiness probe. Safe to poll from uptime monitors."""
+    db_ok = True
+    db_error: Optional[str] = None
+    try:
+        await db.command("ping")
+    except Exception as exc:
+        db_ok = False
+        db_error = str(exc)
+
+    payload = {
+        "status": "ok" if db_ok else "degraded",
+        "service": "aether-backend",
+        "version": APP_VERSION,
+        "commit": BUILD_COMMIT,
+        "database": "ok" if db_ok else "unreachable",
+        "uptime_seconds": int((datetime.now(timezone.utc) - BOOT_TIME).total_seconds()),
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if db_error:
+        payload["database_error"] = db_error
+    return JSONResponse(payload, status_code=200 if db_ok else 503)
+
+
+@api_router.get("/version")
+async def version():
+    """Deployed build metadata — useful for smoke-testing a fresh deploy."""
+    return {
+        "service": "aether-backend",
+        "version": APP_VERSION,
+        "commit": BUILD_COMMIT,
+        "booted_at": BOOT_TIME.isoformat(),
+    }
 
 
 # ────────────────────────────────────────────────────────────────────────────
