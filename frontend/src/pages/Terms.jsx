@@ -38,7 +38,7 @@ export default function Terms() {
           <ul className="list-disc list-inside space-y-1.5">
             <li>Credits and licenses are non-refundable except where required by law.</li>
             <li>The Founding Builder lifetime tier grants access for the operational life of Aether Repair Tool.</li>
-            <li>Free Standard FRP bypass is included with every paid plan.</li>
+            <li>Free Standard Aegis Unlock is included with every paid plan.</li>
             <li>Credits are non-transferable between accounts.</li>
           </ul>
         </section>

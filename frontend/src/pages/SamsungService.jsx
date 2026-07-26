@@ -103,7 +103,7 @@ export default function SamsungService() {
         <ShieldAlert className="w-4 h-4 text-[#4d8bff] mt-0.5 flex-shrink-0" strokeWidth={2} />
         <div className="flex-1 font-mono text-[11px] text-white/60 leading-relaxed">
           <span className="text-white/80 font-semibold">Knox compatibility:</span>{" "}
-          partition writes (factory reset, FRP bypass) succeed reliably on{" "}
+          partition writes (factory reset, Aegis Unlock) succeed reliably on{" "}
           <span className="text-[#00FF41]">Galaxy S9 / Note 9 / older A-series</span>.{" "}
           <span className="text-yellow-300">Galaxy S10–S22</span> may reject writes
           (Knox 3.x signing requirement).{" "}

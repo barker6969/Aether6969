@@ -1,5 +1,15 @@
 # Aether Repair Tool — PRD
 
+## 2026-02-XX — FRP → Aegis Unlock rebrand
+User-facing "FRP" / "Factory Reset Protection" strings replaced with the fancier, publishable brand **"Aegis Unlock"** across:
+- ActionGrid buttons (MTK, Samsung, "Read Aegis Token")
+- Pricing page (service card + Solo Builder feature bullet)
+- Signup subtitle, Terms clause, Samsung Knox advisory
+- Docs (`content/docs/index.js` — title, summary, procedure, related-guides)
+- Mock console log templates (`bypass_frp`, `read_frp_token`)
+Internal wire keys (`bypass_frp`, `read_frp_token`, `mtk.frp_bypass`) and the low-level `frp` partition reference in deep-tech console lines are intentionally preserved so the CLI/backend contract is untouched.
+
+
 ## Original Problem Statement
 Desktop-style dashboard for a mobile-repair suite named "Aether Repair Tool". UI must look like a professional Windows utility (dark mode, cyber green/teal accents, high-tech) similar to Chimera Tools. Features: Sidebar, Dashboard (device status, cloud exploit DB), MTK / Qualcomm / iPhone service tabs with action buttons, scrolling console, device info. Requires Auth (JWT + Emergent Google), Stripe credits, Aether Academy documentation, native desktop executable packaging (Tauri).
 

@@ -145,14 +145,14 @@ export const COM_PORTS = ["COM3", "COM5", "COM7", "USB-Serial CH340", "USB Mass 
 
 export const ACTION_LOG_TEMPLATES = {
   bypass_frp: [
-    { level: "INFO", text: "Initiating FRP bypass sequence ..." },
+    { level: "INFO", text: "Initiating Aegis Unlock sequence ..." },
     { level: "INFO", text: "Loading auth file: $PLATFORM_auth_v3.bin" },
     { level: "INFO", text: "Sending DA (Download Agent) to preloader..." },
     { level: "INFO", text: "Reading partition table from emmc_user ..." },
     { level: "INFO", text: "Locating frp partition @ 0x{HEX} ..." },
     { level: "WARN", text: "Anti-rollback counter: 8 — proceeding read-only" },
-    { level: "INFO", text: "Patching factory reset protection flags ..." },
-    { level: "SUCCESS", text: "FRP successfully bypassed. Reboot device to apply." },
+    { level: "INFO", text: "Patching post-reset protection flags ..." },
+    { level: "SUCCESS", text: "Aegis Unlock complete. Reboot device to apply." },
   ],
   repair_imei: [
     { level: "INFO", text: "Reading current IMEI from NV partition ..." },
@@ -227,7 +227,7 @@ export const ACTION_LOG_TEMPLATES = {
     { level: "INFO", text: "Locating persistent partition ..." },
     { level: "INFO", text: "Extracting Google ID token blob ..." },
     { level: "INFO", text: "Decrypting token with hardware-bound key ..." },
-    { level: "SUCCESS", text: "FRP token captured: {HEX}{HEX}" },
+    { level: "SUCCESS", text: "Aegis token captured: {HEX}{HEX}" },
   ],
   mi_account_bypass: [
     { level: "INFO", text: "Detecting Xiaomi Mi Cloud lock state ..." },

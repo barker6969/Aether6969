@@ -56,7 +56,7 @@ export default function Signup() {
             <div className="text-center mb-6">
               <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
               <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-white/40 mt-1.5">
-                100 starter credits · free Standard FRP
+                100 starter credits · free Standard Aegis Unlock
               </p>
             </div>
 

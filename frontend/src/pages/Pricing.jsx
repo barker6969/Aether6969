@@ -9,7 +9,7 @@ const PLAN = {
   tagline: "For independent technicians and small-shop builders.",
   features: [
     "Unlimited device scans (MTK / Qualcomm / iPhone)",
-    "Standard FRP bypass — included free",
+    "Standard Aegis Unlock — included free",
     "Full session logs + audit export",
     "Exploit DB updates for 12 months",
     "Single-seat license · 2 active devices",
@@ -20,11 +20,11 @@ const PLAN = {
 const SERVICES = [
   {
     key: "frp",
-    name: "Standard FRP",
+    name: "Standard Aegis Unlock",
     cost: "FREE",
     cost_value: 0,
     icon: ShieldOff,
-    desc: "Factory Reset Protection bypass for MTK & Qualcomm devices on stock firmware.",
+    desc: "Post-reset account guard release for MTK & Qualcomm devices on stock firmware.",
     free: true,
     testid: "service-frp",
   },

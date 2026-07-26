@@ -40,7 +40,7 @@ const ICONS = {
 };
 
 const DEFAULT_ACTIONS = [
-  { key: "bypass_frp",        label: "Bypass FRP",          icon: "ShieldOff", danger: false, testid: "action-bypass-frp", cost: "Free" },
+  { key: "bypass_frp",        label: "Aegis Unlock",        icon: "ShieldOff", danger: false, testid: "action-bypass-frp", cost: "Free" },
   { key: "repair_imei",       label: "Repair IMEI",         icon: "Hash",      danger: false, testid: "action-repair-imei", cost: "5 Credits" },
   { key: "unlock_bootloader", label: "Unlock Bootloader",   icon: "Unlock",    danger: true,  testid: "action-unlock-bootloader", cost: "10 Credits" },
   { key: "erase_userdata",    label: "Erase Userdata",      icon: "Eraser",    danger: true,  testid: "action-erase-userdata", cost: "Free" },
@@ -154,7 +154,7 @@ export const MTK_ACTIONS = [
   ...DEFAULT_ACTIONS,
   { key: "mi_account_bypass", label: "Mi Account Bypass", icon: "Cloud",     danger: false, testid: "action-mi-account",   cost: "20 Credits" },
   { key: "read_codes",        label: "Read Lockscreen",    icon: "KeyRound",  danger: false, testid: "action-read-codes",   cost: "8 Credits" },
-  { key: "read_frp_token",    label: "Read FRP Token",     icon: "Fingerprint", danger: false, testid: "action-read-frp",   cost: "3 Credits" },
+  { key: "read_frp_token",    label: "Read Aegis Token",   icon: "Fingerprint", danger: false, testid: "action-read-frp",   cost: "3 Credits" },
   { key: "boot_repair",       label: "Boot Repair",        icon: "Wrench",    danger: false, testid: "action-boot-repair",  cost: "10 Credits" },
 ];
 
@@ -182,5 +182,5 @@ export const SAMSUNG_ACTIONS = [
   { key: "samsung_detect",        label: "Detect Device",      icon: "Search",       danger: false, testid: "action-samsung-detect",  cost: "Free" },
   { key: "samsung_read_pit",      label: "Read PIT Table",     icon: "Hash",         danger: false, testid: "action-samsung-pit",     cost: "Free" },
   { key: "samsung_factory_reset", label: "Factory Reset",      icon: "Eraser",       danger: true,  testid: "action-samsung-reset",   cost: "15 Credits" },
-  { key: "bypass_frp",            label: "Bypass FRP",         icon: "ShieldOff",    danger: false, testid: "action-samsung-frp",     cost: "20 Credits" },
+  { key: "bypass_frp",            label: "Aegis Unlock",       icon: "ShieldOff",    danger: false, testid: "action-samsung-frp",     cost: "20 Credits" },
 ];

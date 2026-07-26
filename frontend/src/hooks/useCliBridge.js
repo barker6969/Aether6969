@@ -11,7 +11,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
  *    field.
  * 4. `call(method, params)` issues a one-shot request/response.
  * 5. `runJob(method, params, onEvent)` starts a streaming mtkclient job
- *    (FRP bypass, IMEI repair, bootloader unlock, etc.). The callback
+ *    (Aegis Unlock, IMEI repair, bootloader unlock, etc.). The callback
  *    receives every `event` notification — including the final
  *    `{stream:"done", exit_code:N}` payload. Returns a promise that
  *    resolves to the exit code.

@@ -52,11 +52,11 @@ Keep these for at least 12 months in case of a Samsung enterprise audit.
 
 ## Related guides
 
-- MTK BROM FRP Bypass
+- MTK BROM Aegis Unlock
 - Qualcomm EDL IMEI Repair
 `;
 
-const mtkFrp = `# MTK BROM — FRP (Factory Reset Protection) Bypass
+const mtkFrp = `# MTK BROM — Aegis Unlock
 
 > **Audience:** Repair technicians servicing MediaTek devices.
 > **Cost:** FREE — included in Solo Builder and above.
@@ -64,14 +64,14 @@ const mtkFrp = `# MTK BROM — FRP (Factory Reset Protection) Bypass
 
 ## Background
 
-When a Google account is removed from an Android device using a non-standard process (e.g. factory reset before logout), the **Factory Reset Protection** flag is left active. The device boots, but blocks setup with a Google account prompt. Aether's MTK FRP Bypass uses the **BROM (Boot ROM)** download mode to patch the FRP partition flag without re-flashing the entire firmware.
+When a Google account is removed from an Android device using a non-standard process (e.g. factory reset before logout), the post-reset account guard flag is left active. The device boots, but blocks setup with a Google account prompt. Aether's MTK Aegis Unlock uses the **BROM (Boot ROM)** download mode to patch the guard flag without re-flashing the entire firmware.
 
 ## How it works
 
 1. Aether sends a **Download Agent (DA)** signed payload to BROM over USB.
 2. The DA gains direct eMMC access (read/write).
-3. The FRP partition is located by scanning the GPT.
-4. Bits in the FRP flag are patched (no other data is touched).
+3. The target partition is located by scanning the GPT.
+4. Bits in the guard flag are patched (no other data is touched).
 5. The device reboots clean.
 
 ## Procedure
@@ -79,15 +79,15 @@ When a Google account is removed from an Android device using a non-standard pro
 1. Power off the target device. Disconnect USB.
 2. Hold **Vol-** (some models: Vol+), and plug the USB cable into the host.
 3. Within 2 seconds Aether will detect: \`MediaTek BROM detected · MT6xxx\`.
-4. Go to **MTK Service → Bypass FRP**.
-5. Click **Bypass FRP**. The console will stream:
+4. Go to **MTK Service → Aegis Unlock**.
+5. Click **Aegis Unlock**. The console will stream:
    \`\`\`
    [INFO]    Sending DA (Download Agent) to preloader...
    [INFO]    Reading partition table from emmc_user ...
    [INFO]    Locating frp partition @ 0x...
    [WARN]    Anti-rollback counter: 8 — proceeding read-only
-   [INFO]    Patching factory reset protection flags ...
-   [SUCCESS] FRP successfully bypassed. Reboot device to apply.
+   [INFO]    Patching post-reset protection flags ...
+   [SUCCESS] Aegis Unlock complete. Reboot device to apply.
    \`\`\`
 6. Unplug USB. Power on. Complete setup with no Google account prompt.
 
@@ -102,7 +102,7 @@ Devices with \`anti-rollback counter >= 8\` require an upgraded DA. Aether autom
 
 ## Best practice
 
-Always perform an \`adb backup\` of the customer's data **before** the operation. FRP bypass is non-destructive, but unrelated user data can be lost if the wrong DA fires.
+Always perform an \`adb backup\` of the customer's data **before** the operation. Aegis Unlock is non-destructive, but unrelated user data can be lost if the wrong DA fires.
 `;
 
 const qcImei = `# Qualcomm EDL — IMEI Repair
@@ -154,7 +154,7 @@ Always confirm the dial-code result matches both IMEIs you intended to write. If
 
 ## Related guides
 
-- MTK BROM FRP Bypass
+- MTK BROM Aegis Unlock
 - Samsung KG Suspend
 `;
 
@@ -170,8 +170,8 @@ export const DOCS = [
   },
   {
     slug: "mtk-brom-frp-bypass",
-    title: "MTK BROM — FRP Bypass",
-    summary: "Patch the FRP partition over BROM. Standard FRP — included free.",
+    title: "MTK BROM — Aegis Unlock",
+    summary: "Patch the protection flag over BROM. Standard Aegis Unlock — included free.",
     platform: "MediaTek",
     minutes: 5,
     cost: "Free",
