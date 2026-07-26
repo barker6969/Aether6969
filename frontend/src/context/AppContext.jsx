@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
+import { toast } from "sonner";
 import { generateDevice, COM_PORTS, ACTION_LOG_TEMPLATES, fillTemplate } from "../lib/mockData";
 import { useCliBridge } from "../hooks/useCliBridge";
 import { useWebUsb } from "../hooks/useWebUsb";
@@ -73,9 +74,9 @@ export const AppProvider = ({ children }) => {
     pushLog("INFO", "Aether driver loaded. Scanning USB bus ...");
     pushLog("INFO", "Listening on COM ports: " + COM_PORTS.join(", "));
 
-    const t1 = setTimeout(() => pushLog("INFO", "Probing for MTK preloader signature ..."), 800);
-    const t2 = setTimeout(() => pushLog("INFO", "Probing for Qualcomm EDL 9008 ..."), 1400);
-    const t2b = setTimeout(() => pushLog("INFO", "Probing for Samsung Download Mode (Odin/Loke) ..."), 2000);
+    const t1 = setTimeout(() => pushLog("INFO", "Probing for MTK preloader signature ..."), 350);
+    const t2 = setTimeout(() => pushLog("INFO", "Probing for Qualcomm EDL 9008 ..."), 700);
+    const t2b = setTimeout(() => pushLog("INFO", "Probing for Samsung Download Mode (Odin/Loke) ..."), 1000);
     const t3 = setTimeout(() => {
       const dev = generateDevice(chipset);
       const port = COM_PORTS[Math.floor(Math.random() * COM_PORTS.length)];
@@ -85,7 +86,8 @@ export const AppProvider = ({ children }) => {
       pushLog("SUCCESS", `Handshake OK on ${port}`);
       pushLog("SUCCESS", `Device detected: ${dev.model}`);
       pushLog("INFO", `Brand: ${dev.brand} | Android ${dev.android} | Patch ${dev.patch}`);
-    }, 2800);
+      toast.success(`Connected · ${dev.model}`, { description: `${dev.brand} · ${dev.platform} · ${port}` });
+    }, 1400);
     timersRef.current = [t1, t2, t2b, t3];
   }, [pushLog, clearTimers]);
 
@@ -187,8 +189,10 @@ export const AppProvider = ({ children }) => {
             } else if (ev.stream === "done") {
               if (ev.exit_code === 0) {
                 pushLog("SUCCESS", `${label} completed (exit 0).`);
+                toast.success(`${label} · done`, { description: "Operation completed successfully." });
               } else {
                 pushLog("ERROR", `${label} failed (exit ${ev.exit_code}).`);
+                toast.error(`${label} · failed`, { description: `Exit code ${ev.exit_code}` });
               }
               const finishT = setTimeout(() => {
                 setActiveAction(null);
@@ -200,6 +204,7 @@ export const AppProvider = ({ children }) => {
           })
           .catch((e) => {
             pushLog("ERROR", `bridge error: ${e?.message || e}`);
+            toast.error("Bridge error", { description: e?.message || String(e) });
             setActiveAction(null);
             setStatus("connected");
             setProgress(0);
@@ -231,6 +236,9 @@ export const AppProvider = ({ children }) => {
                 setActiveAction(null);
                 setStatus("connected");
                 setProgress(0);
+                toast.success(`${label} · demo complete`, {
+                  description: "Install the CLI to run this operation on real hardware.",
+                });
               }, 600);
               timersRef.current.push(finishT);
             }
@@ -250,19 +258,19 @@ export const AppProvider = ({ children }) => {
     bootedRef.current = true;
     pushLog("INFO", "[Aether] Initializing modules...");
     const boot = [
-      { delay: 250, level: "INFO", text: "[Aether] Loading kernel driver aether-usb 2.4.1 ... OK" },
-      { delay: 500, level: "INFO", text: "[Aether] Qualcomm Sahara Engine Loaded" },
-      { delay: 750, level: "INFO", text: "[Aether] MediaTek BROM Engine Loaded" },
-      { delay: 1000, level: "INFO", text: "[Aether] Apple DFU Pipeline Loaded (checkm8 / pongoOS)" },
-      { delay: 1250, level: "INFO", text: "[Aether] Wallet sync · license active" },
-      { delay: 1500, level: "SUCCESS", text: "[Aether] Ready. Awaiting target device." },
+      { delay: 120, level: "INFO", text: "[Aether] Loading kernel driver aether-usb 2.4.1 ... OK" },
+      { delay: 240, level: "INFO", text: "[Aether] Qualcomm Sahara Engine Loaded" },
+      { delay: 360, level: "INFO", text: "[Aether] MediaTek BROM Engine Loaded" },
+      { delay: 480, level: "INFO", text: "[Aether] Apple DFU Pipeline Loaded (checkm8 / pongoOS)" },
+      { delay: 600, level: "INFO", text: "[Aether] Wallet sync · license active" },
+      { delay: 720, level: "SUCCESS", text: "[Aether] Ready. Awaiting target device." },
     ];
     boot.forEach((b) => {
       const t = setTimeout(() => pushLog(b.level, b.text), b.delay);
       timersRef.current.push(t);
     });
     if (autoConnect) {
-      const t = setTimeout(() => startSearch(), 1900);
+      const t = setTimeout(() => startSearch(), 900);
       timersRef.current.push(t);
     }
     return () => clearTimers();

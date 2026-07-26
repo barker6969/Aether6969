@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useApp } from "../context/AppContext";
-import { Terminal, Trash2, Pause, Play } from "lucide-react";
+import { Terminal, Trash2, Pause, Play, PlayCircle } from "lucide-react";
 
 const LEVEL_COLORS = {
   INFO: "text-cyan-400",
@@ -17,11 +17,12 @@ const LEVEL_BG = {
 };
 
 export const Console = ({ height = "h-64", limit }) => {
-  const { logs, clearLogs } = useApp();
+  const { logs, clearLogs, startSearch, status } = useApp();
   const scrollRef = useRef(null);
   const [paused, setPaused] = React.useState(false);
 
   const visible = limit ? logs.slice(-limit) : logs;
+  const isEmpty = visible.length === 0;
 
   useEffect(() => {
     if (!paused && scrollRef.current) {
@@ -71,6 +72,28 @@ export const Console = ({ height = "h-64", limit }) => {
         data-testid="console-output"
         className="flex-1 overflow-y-auto px-3 py-2 font-mono text-[12px] leading-[1.55] terminal-scan relative"
       >
+        {isEmpty && (
+          <div
+            data-testid="console-empty-state"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-6"
+          >
+            <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-white/30">
+              Console is quiet — awaiting operations
+            </div>
+            <button
+              data-testid="console-empty-cta"
+              onClick={() => startSearch()}
+              disabled={status === "searching" || status === "working"}
+              className="h-9 px-4 border border-[#00FF41]/40 bg-[#00FF41]/5 hover:bg-[#00FF41]/15 text-[#00FF41] font-mono text-[10px] tracking-[0.22em] uppercase transition-colors flex items-center gap-2 disabled:opacity-40"
+            >
+              <PlayCircle className="w-3.5 h-3.5" />
+              Run demo scan · free
+            </button>
+            <div className="font-mono text-[9px] tracking-[0.22em] uppercase text-white/25 max-w-xs leading-relaxed">
+              First time here? A scan streams live logs so you can see how the app talks to real hardware.
+            </div>
+          </div>
+        )}
         {visible.map((log) => (
           <div key={log.id} className="flex gap-3 group hover:bg-white/[0.02]">
             <span className="text-white/30 select-none">[{log.ts}]</span>
@@ -81,10 +104,12 @@ export const Console = ({ height = "h-64", limit }) => {
             <span className="text-white/85 break-all">{log.text}</span>
           </div>
         ))}
-        <div className="flex items-center text-[#00FF41]">
-          <span className="select-none">aether@target:~$ </span>
-          <span className="ml-1 inline-block w-2 h-3.5 bg-[#00FF41] animate-blink" />
-        </div>
+        {!isEmpty && (
+          <div className="flex items-center text-[#00FF41]">
+            <span className="select-none">aether@target:~$ </span>
+            <span className="ml-1 inline-block w-2 h-3.5 bg-[#00FF41] animate-blink" />
+          </div>
+        )}
       </div>
     </div>
   );

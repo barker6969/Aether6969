@@ -1,6 +1,7 @@
 import React from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext";
 import { AppProvider } from "./context/AppContext";
 import { WindowChrome } from "./components/WindowChrome";
@@ -30,13 +31,17 @@ import DocsHub from "./pages/DocsHub";
 import DocArticle from "./pages/DocArticle";
 
 function AppShell() {
+  const location = useLocation();
   return (
     <AppProvider>
       <div className="h-screen w-screen flex flex-col bg-black text-white overflow-hidden">
         <WindowChrome />
         <div className="flex-1 flex min-h-0">
           <Sidebar />
-          <main className="flex-1 min-w-0 bg-[#040405] bg-noise overflow-hidden">
+          <main
+            key={location.pathname}
+            className="flex-1 min-w-0 bg-[#040405] bg-noise overflow-hidden animate-in fade-in-0 duration-200"
+          >
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/mtk" element={<MTKService />} />
@@ -93,6 +98,21 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRouter />
+        <Toaster
+          position="bottom-right"
+          theme="dark"
+          toastOptions={{
+            style: {
+              background: "#09090B",
+              border: "1px solid rgba(0,255,65,0.25)",
+              color: "#fff",
+              fontFamily: "JetBrains Mono, monospace",
+              fontSize: "12px",
+              letterSpacing: "0.05em",
+              borderRadius: "2px",
+            },
+          }}
+        />
       </AuthProvider>
     </BrowserRouter>
   );

@@ -131,10 +131,10 @@ const AuthorCredit = () => (
     rel="noreferrer"
     data-testid="sidebar-author-credit"
     className="group border-t border-white/5 px-4 py-2 flex items-center justify-between font-mono text-[9px] tracking-[0.25em] uppercase text-white/25 hover:text-[#00FF41] hover:bg-[#00FF41]/[0.03] transition-colors"
-    title="View creator on GitHub"
+    title="Founded by Braiden Barker & Byron Thompson"
   >
-    <span>Made by</span>
-    <span className="text-white/40 group-hover:text-[#00FF41]">Braiden&nbsp;Barker</span>
+    <span>Founders</span>
+    <span className="text-white/40 group-hover:text-[#00FF41]">Braiden&nbsp;+&nbsp;Byron</span>
   </a>
 );
 

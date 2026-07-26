@@ -525,6 +525,22 @@ async def root():
 # ────────────────────────────────────────────────────────────────────────────
 # Startup
 # ────────────────────────────────────────────────────────────────────────────
+FOUNDER_ACCOUNTS = [
+    # Full-access founder accounts. Passwords come from env; the defaults below
+    # are used only in dev/preview. Rotate in production via .env.
+    {
+        "name": "Braiden Barker",
+        "email_env": "BRAIDEN_EMAIL",   "email_default": "braiden@aether.dev",
+        "pw_env":    "BRAIDEN_PASSWORD","pw_default":    "founder_braiden_2026",
+    },
+    {
+        "name": "Byron Thompson",
+        "email_env": "BYRON_EMAIL",     "email_default": "byron@aether.dev",
+        "pw_env":    "BYRON_PASSWORD",  "pw_default":    "founder_byron_2026",
+    },
+]
+
+
 async def seed_admin():
     admin_email = os.environ.get("ADMIN_EMAIL", "admin@aether.dev").lower()
     admin_pw = os.environ.get("ADMIN_PASSWORD", "admin123")
@@ -550,6 +566,51 @@ async def seed_admin():
         logger.info("Updated admin password to .env value")
 
 
+async def seed_founders() -> None:
+    """Seed the two founder accounts (Braiden + Byron) with full access.
+
+    - role: 'admin' (unlocks any protected route)
+    - plan: 'founding_builder'  (highest tier)
+    - credits: 1_000_000        (effectively unlimited)
+    Idempotent: creates on first startup, refreshes plan/credits on subsequent
+    ones so the founders can never accidentally deplete themselves.
+    """
+    for f in FOUNDER_ACCOUNTS:
+        email = os.environ.get(f["email_env"], f["email_default"]).lower()
+        pw = os.environ.get(f["pw_env"], f["pw_default"])
+        existing = await db.users.find_one({"email": email})
+        if existing is None:
+            await db.users.insert_one(
+                {
+                    "user_id": f"user_{uuid.uuid4().hex[:12]}",
+                    "email": email,
+                    "name": f["name"],
+                    "picture": None,
+                    "password_hash": hash_password(pw),
+                    "role": "admin",
+                    "plan": "founding_builder",
+                    "credits": 1_000_000,
+                    "provider": "email",
+                    "founder": True,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                }
+            )
+            logger.info(f"Seeded founder: {email}")
+        else:
+            # Refresh perms + reset credits to unlimited on every boot.
+            updates = {
+                "role": "admin",
+                "plan": "founding_builder",
+                "credits": max(existing.get("credits", 0), 1_000_000),
+                "founder": True,
+                "name": existing.get("name") or f["name"],
+            }
+            if not verify_password(pw, existing["password_hash"]):
+                updates["password_hash"] = hash_password(pw)
+            await db.users.update_one({"email": email}, {"$set": updates})
+            logger.info(f"Refreshed founder: {email}")
+
+
 @app.on_event("startup")
 async def on_startup():
     await db.users.create_index("email", unique=True)
@@ -558,6 +619,22 @@ async def on_startup():
     await db.login_attempts.create_index("identifier")
     await db.payment_transactions.create_index("session_id", unique=True)
     await seed_admin()
+    await seed_founders()
+    # Also promote your existing accounts (if you've already signed up with a real email)
+    # to founder status so you don't have to switch accounts.
+    for real_email in ["braidenbarker5@gmail.com"]:
+        existing = await db.users.find_one({"email": real_email})
+        if existing is not None:
+            await db.users.update_one(
+                {"email": real_email},
+                {"$set": {
+                    "role": "admin",
+                    "plan": "founding_builder",
+                    "credits": max(existing.get("credits", 0), 1_000_000),
+                    "founder": True,
+                }},
+            )
+            logger.info(f"Promoted existing account to founder: {real_email}")
     logger.info("Aether backend startup complete")
 
 
