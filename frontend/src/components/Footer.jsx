@@ -12,6 +12,17 @@ export const Footer = () => {
         <span>© {year} Aether Labs</span>
         <span className="text-white/20">·</span>
         <span className="hidden md:inline">For licensed technicians</span>
+        <span className="text-white/20 hidden lg:inline">·</span>
+        <a
+          data-testid="footer-author-credit"
+          href="https://github.com/braidenbarker"
+          target="_blank"
+          rel="noreferrer"
+          className="hidden lg:inline hover:text-[#00FF41] transition-colors"
+          title="Made by Braiden Barker"
+        >
+          Made by Braiden Barker
+        </a>
       </div>
       <nav className="flex items-center gap-3">
         <Link data-testid="footer-docs" to="/docs" className="hover:text-[#00FF41] transition-colors normal-case tracking-wider">

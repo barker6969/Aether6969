@@ -15,8 +15,8 @@ const buildSignals = () => {
     {
       key: "author",
       icon: Sparkles,
-      lead: "AETHER REPAIR SUITE · founded by",
-      accent: "Braiden Barker & Byron Thompson",
+      lead: "AETHER REPAIR SUITE · made by",
+      accent: "Braiden Barker",
       href: "https://github.com/braidenbarker",
     },
     {
