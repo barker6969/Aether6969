@@ -581,6 +581,35 @@ async def version():
     }
 
 
+class DesktopWaitlistRequest(BaseModel):
+    email: EmailStr
+    platform: str = Field(default="windows", pattern="^(windows|macos|linux)$")
+
+
+@api_router.post("/waitlist/desktop")
+async def waitlist_desktop(payload: DesktopWaitlistRequest, request: Request):
+    """Collect emails for the native desktop build launch waitlist.
+    Idempotent per (email, platform) — resubmitting the same address updates
+    the timestamp rather than creating duplicates.
+    """
+    email = payload.email.lower().strip()
+    now = datetime.now(timezone.utc)
+    doc = {
+        "email": email,
+        "platform": payload.platform,
+        "created_at": now.isoformat(),
+        "ip": request.client.host if request.client else None,
+        "ua": request.headers.get("user-agent", "")[:200],
+    }
+    await db.desktop_waitlist.update_one(
+        {"email": email, "platform": payload.platform},
+        {"$set": doc, "$setOnInsert": {"first_seen": now.isoformat()}},
+        upsert=True,
+    )
+    total = await db.desktop_waitlist.count_documents({"platform": payload.platform})
+    return {"ok": True, "queued": True, "platform": payload.platform, "waitlist_size": total}
+
+
 # ────────────────────────────────────────────────────────────────────────────
 # Startup
 # ────────────────────────────────────────────────────────────────────────────
