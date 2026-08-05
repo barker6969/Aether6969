@@ -3,6 +3,7 @@ import { Download, X, Monitor, Apple, Cpu, ExternalLink } from "lucide-react";
 import {
   DESKTOP_VERSION as VERSION,
   DESKTOP_RELEASES_BASE as RELEASES_BASE,
+  DESKTOP_ASSETS,
 } from "../lib/releases";
 
 const STORAGE_KEY = "aether.hero.getDesktop.dismissed";
@@ -12,21 +13,21 @@ const BUILDS = [
     key: "windows-x64",
     label: "Windows",
     sub: ".msi · x64",
-    file: `Aether_${VERSION}_x64_en-US.msi`,
+    file: DESKTOP_ASSETS.windows,
     icon: Monitor,
   },
   {
     key: "macos-universal",
     label: "macOS",
     sub: ".dmg · Universal",
-    file: `Aether_${VERSION}_universal.dmg`,
+    file: DESKTOP_ASSETS.macos,
     icon: Apple,
   },
   {
     key: "linux-x64",
     label: "Linux",
     sub: ".AppImage · x64",
-    file: `aether-desktop_${VERSION}_amd64.AppImage`,
+    file: DESKTOP_ASSETS.linux,
     icon: Monitor,
   },
 ];

@@ -1,32 +1,32 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { Download, Monitor, ExternalLink, Apple } from "lucide-react";
-import { DESKTOP_VERSION as VERSION, DESKTOP_RELEASES_BASE as RELEASES_BASE } from "../lib/releases";
-
-// Standalone download popover for the native Aether Repair Tool desktop app
-// (.msi for Windows, .dmg for macOS, .AppImage for Linux). Points at the
-// GitHub Releases artefacts produced by .github/workflows/aether-desktop-release.yml.
+import {
+  DESKTOP_VERSION as VERSION,
+  DESKTOP_RELEASES_BASE as RELEASES_BASE,
+  DESKTOP_ASSETS,
+} from "../lib/releases";
 
 const BUILDS = [
   {
     key: "windows-x64",
     label: "Windows (x64)",
-    sub: ".msi installer · 6.4 MB",
-    file: `Aether_${VERSION}_x64_en-US.msi`,
+    sub: ".msi installer · ~2.3 MB",
+    file: DESKTOP_ASSETS.windows,
     icon: Monitor,
   },
   {
     key: "macos-universal",
     label: "macOS (Universal)",
-    sub: ".dmg · Intel + Apple Silicon · 12.3 MB",
-    file: `Aether_${VERSION}_universal.dmg`,
+    sub: ".dmg · Intel + Apple Silicon · ~7 MB",
+    file: DESKTOP_ASSETS.macos,
     icon: Apple,
   },
   {
     key: "linux-x64",
     label: "Linux (x64)",
-    sub: ".AppImage · 14.7 MB",
-    file: `aether-desktop_${VERSION}_amd64.AppImage`,
+    sub: ".AppImage · ~76 MB",
+    file: DESKTOP_ASSETS.linux,
     icon: Monitor,
   },
 ];
@@ -93,7 +93,7 @@ const DesktopPopover = ({ onClose, onSelect }) => (
 
       <div className="p-4 space-y-3">
         <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-white/50 leading-relaxed">
-          Standalone .exe / .dmg / .AppImage. Bundles the dashboard with
+          Standalone .msi / .dmg / .AppImage. Bundles the dashboard with
           the local CLI bridge so it talks to USB devices directly —
           no browser, no Demo Mode.
         </div>
@@ -110,7 +110,7 @@ const DesktopPopover = ({ onClose, onSelect }) => (
         </div>
 
         <div className="font-mono text-[10px] text-white/40 leading-relaxed pt-1 border-t border-white/5">
-          Tauri 2 · WebView2 / WebKit · ~6 MB installer · auto-updater enabled
+          Tauri 2 · WebView2 / WebKit · unsigned builds may show SmartScreen / Gatekeeper
         </div>
       </div>
     </div>
