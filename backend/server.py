@@ -13,17 +13,13 @@ from typing import Optional, Dict, Any
 
 import bcrypt
 import jwt as pyjwt
+import stripe as stripe_sdk
 from fastapi import FastAPI, APIRouter, Request, Response, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr, Field
 import httpx
-
-from emergentintegrations.payments.stripe.checkout import (
-    StripeCheckout,
-    CheckoutSessionRequest,
-)
 
 # ────────────────────────────────────────────────────────────────────────────
 # Configuration
@@ -35,7 +31,9 @@ REFRESH_TOKEN_TTL_DAYS = 7
 EMERGENT_SESSION_TTL_DAYS = 7
 
 STRIPE_API_KEY = os.environ["STRIPE_API_KEY"]
-EMERGENT_SESSION_DATA_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
+stripe_sdk.api_key = STRIPE_API_KEY
 
 # Server-side fixed pricing — NEVER accept amount from client
 PRICING_TIERS = {
@@ -178,20 +176,17 @@ async def _resolve_session_token(token: str) -> Optional[Dict[str, Any]]:
 
 
 async def get_current_user(request: Request) -> Dict[str, Any]:
-    """Accepts JWT access_token cookie OR Emergent session_token cookie OR bearer header."""
-    # 1. JWT access_token cookie
+    """Accepts JWT access_token cookie OR session_token cookie OR bearer header."""
     tok = request.cookies.get("access_token")
     if tok:
         user = await _resolve_jwt(tok)
         if user:
             return user
-    # 2. Emergent session_token cookie
     sess = request.cookies.get("session_token")
     if sess:
         user = await _resolve_session_token(sess)
         if user:
             return user
-    # 3. Authorization Bearer header (testing)
     auth = request.headers.get("Authorization", "")
     if auth.startswith("Bearer "):
         bearer = auth[7:]
@@ -264,8 +259,6 @@ async def signup(payload: SignupRequest, response: Response):
 @api_router.post("/auth/login")
 async def login(payload: LoginRequest, request: Request, response: Response):
     email = payload.email.lower().strip()
-    # Use email as the brute-force identifier — request.client.host is the upstream pod
-    # IP in k8s/ingress contexts, which rotates per-request and breaks counter accumulation.
     identifier = f"email:{email}"
     if await _is_locked(identifier):
         raise HTTPException(status_code=429, detail="Too many failed attempts. Try again in 15 minutes.")
@@ -280,7 +273,6 @@ async def login(payload: LoginRequest, request: Request, response: Response):
 
 @api_router.post("/auth/logout")
 async def logout(request: Request, response: Response):
-    # If Emergent session, delete from DB
     st = request.cookies.get("session_token")
     if st:
         await db.user_sessions.delete_one({"session_token": st})
@@ -290,81 +282,6 @@ async def logout(request: Request, response: Response):
 
 @api_router.get("/auth/me")
 async def me(user=Depends(get_current_user)):
-    return public_user(user)
-
-
-async def _fetch_emergent_profile(session_id: str) -> Dict[str, Any]:
-    """Call Emergent oauth data endpoint; validate response contract."""
-    async with httpx.AsyncClient(timeout=15) as http:
-        r = await http.get(EMERGENT_SESSION_DATA_URL, headers={"X-Session-ID": session_id})
-    if r.status_code != 200:
-        raise HTTPException(status_code=401, detail="Invalid session_id")
-    data = r.json()
-    email = (data.get("email") or "").lower().strip()
-    if not email:
-        raise HTTPException(status_code=400, detail="Email missing from oauth payload")
-    data["email"] = email
-    return data
-
-
-async def _upsert_google_user(profile: Dict[str, Any]) -> Dict[str, Any]:
-    """Create a Google-sourced user if missing, otherwise refresh name/picture."""
-    email = profile["email"]
-    user = await db.users.find_one({"email": email})
-    if user is None:
-        user_id = f"user_{uuid.uuid4().hex[:12]}"
-        user_doc = {
-            "user_id": user_id,
-            "email": email,
-            "name": profile.get("name") or email.split("@")[0],
-            "picture": profile.get("picture"),
-            "role": "user",
-            "plan": "free",
-            "credits": 100,
-            "provider": "google",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        }
-        await db.users.insert_one(user_doc)
-        return user_doc
-    await db.users.update_one(
-        {"user_id": user["user_id"]},
-        {"$set": {"name": profile.get("name") or user.get("name"), "picture": profile.get("picture")}},
-    )
-    return user
-
-
-async def _persist_emergent_session(user: Dict[str, Any], session_token: str, response: Response) -> None:
-    """Insert user_sessions row and set the httpOnly session_token cookie."""
-    expires_at = (datetime.now(timezone.utc) + timedelta(days=EMERGENT_SESSION_TTL_DAYS)).isoformat()
-    await db.user_sessions.insert_one(
-        {
-            "user_id": user["user_id"],
-            "session_token": session_token,
-            "expires_at": expires_at,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        }
-    )
-    response.set_cookie(
-        key="session_token",
-        value=session_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        max_age=EMERGENT_SESSION_TTL_DAYS * 86400,
-        path="/",
-    )
-
-
-@api_router.post("/auth/session")
-async def emergent_session_exchange(request: Request, response: Response):
-    """Exchange Emergent OAuth session_id for a session_token cookie."""
-    body = await request.json()
-    session_id = body.get("session_id") if isinstance(body, dict) else None
-    if not session_id:
-        raise HTTPException(status_code=400, detail="session_id required")
-    profile = await _fetch_emergent_profile(session_id)
-    user = await _upsert_google_user(profile)
-    await _persist_emergent_session(user, profile["session_token"], response)
     return public_user(user)
 
 
@@ -395,7 +312,7 @@ async def _grant_purchase(user_id: str, tier_id: str) -> None:
 
 
 # ────────────────────────────────────────────────────────────────────────────
-# Stripe Checkout
+# Stripe Checkout (official stripe SDK)
 # ────────────────────────────────────────────────────────────────────────────
 @api_router.get("/stripe/pricing")
 async def stripe_pricing():
@@ -414,48 +331,51 @@ async def stripe_checkout(payload: CheckoutCreateRequest, request: Request, user
     origin = payload.origin_url.rstrip("/")
     success_url = f"{origin}/payment/success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{origin}/payment/cancel"
-    host_url = str(request.base_url)
-    webhook_url = f"{host_url.rstrip('/')}/api/webhook/stripe"
-    sc = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
-    req = CheckoutSessionRequest(
-        amount=float(tier["amount"]),
-        currency="usd",
+
+    session = stripe_sdk.checkout.Session.create(
+        payment_method_types=["card"],
+        line_items=[{
+            "price_data": {
+                "currency": "usd",
+                "product_data": {"name": tier["label"]},
+                "unit_amount": int(tier["amount"] * 100),
+            },
+            "quantity": 1,
+        }],
+        mode="payment",
         success_url=success_url,
         cancel_url=cancel_url,
         metadata={"tier_id": payload.tier_id, "user_id": user["user_id"]},
     )
-    session = await sc.create_checkout_session(req)
-    await db.payment_transactions.insert_one(
-        {
-            "session_id": session.session_id,
-            "user_id": user["user_id"],
-            "user_email": user["email"],
-            "tier_id": payload.tier_id,
-            "amount": float(tier["amount"]),
-            "currency": "usd",
-            "status": "initiated",
-            "payment_status": "pending",
-            "metadata": {"tier_id": payload.tier_id, "user_id": user["user_id"]},
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "fulfilled": False,
-        }
-    )
-    return {"url": session.url, "session_id": session.session_id}
+
+    await db.payment_transactions.insert_one({
+        "session_id": session.id,
+        "user_id": user["user_id"],
+        "user_email": user["email"],
+        "tier_id": payload.tier_id,
+        "amount": float(tier["amount"]),
+        "currency": "usd",
+        "status": "initiated",
+        "payment_status": "pending",
+        "metadata": {"tier_id": payload.tier_id, "user_id": user["user_id"]},
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "fulfilled": False,
+    })
+    return {"url": session.url, "session_id": session.id}
 
 
 @api_router.get("/stripe/status/{session_id}")
-async def stripe_status(session_id: str, request: Request, user=Depends(get_current_user)):
+async def stripe_status(session_id: str, user=Depends(get_current_user)):
     txn = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
     if not txn:
         raise HTTPException(status_code=404, detail="Transaction not found")
     if txn["user_id"] != user["user_id"]:
         raise HTTPException(status_code=403, detail="Not your transaction")
-    host_url = str(request.base_url)
-    webhook_url = f"{host_url.rstrip('/')}/api/webhook/stripe"
-    sc = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
-    s = None  # silence "possibly unbound" warnings from static analysers
+
     try:
-        s = await sc.get_checkout_status(session_id)
+        session = stripe_sdk.checkout.Session.retrieve(session_id)
+        new_payment_status = session.payment_status
+        new_status = session.status
     except Exception as e:
         logger.warning(f"Stripe status fetch failed for {session_id}: {e}")
         updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "password_hash": 0})
@@ -467,9 +387,7 @@ async def stripe_status(session_id: str, request: Request, user=Depends(get_curr
             "user": public_user(updated_user) if updated_user else None,
             "warning": "Live status temporarily unavailable. Webhook will reconcile shortly.",
         }
-    new_payment_status = s.payment_status
-    new_status = s.status
-    # Idempotent fulfillment
+
     if not txn.get("fulfilled") and new_payment_status == "paid":
         await _grant_purchase(user["user_id"], txn["tier_id"])
         await db.payment_transactions.update_one(
@@ -481,12 +399,13 @@ async def stripe_status(session_id: str, request: Request, user=Depends(get_curr
             {"session_id": session_id},
             {"$set": {"status": new_status, "payment_status": new_payment_status}},
         )
+
     updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "password_hash": 0})
     return {
         "status": new_status,
         "payment_status": new_payment_status,
-        "amount_total": s.amount_total,
-        "currency": s.currency,
+        "amount_total": session.amount_total,
+        "currency": session.currency,
         "user": public_user(updated_user) if updated_user else None,
     }
 
@@ -495,22 +414,28 @@ async def stripe_status(session_id: str, request: Request, user=Depends(get_curr
 async def stripe_webhook(request: Request):
     body = await request.body()
     sig = request.headers.get("Stripe-Signature", "")
-    host_url = str(request.base_url)
-    webhook_url = f"{host_url.rstrip('/')}/api/webhook/stripe"
-    sc = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
     try:
-        evt = await sc.handle_webhook(body, sig)
+        if STRIPE_WEBHOOK_SECRET:
+            evt = stripe_sdk.Webhook.construct_event(body, sig, STRIPE_WEBHOOK_SECRET)
+        else:
+            evt = stripe_sdk.Event.construct_from(
+                {"type": "checkout.session.completed", "data": {"object": stripe_sdk.util.convert_to_stripe_object({})}},
+                stripe_sdk.api_key,
+            )
     except Exception as e:
         logger.warning(f"Stripe webhook parse failed: {e}")
         return JSONResponse(status_code=200, content={"received": True})
-    if evt.payment_status == "paid":
-        txn = await db.payment_transactions.find_one({"session_id": evt.session_id}, {"_id": 0})
-        if txn and not txn.get("fulfilled"):
-            await _grant_purchase(txn["user_id"], txn["tier_id"])
-            await db.payment_transactions.update_one(
-                {"session_id": evt.session_id},
-                {"$set": {"status": "complete", "payment_status": "paid", "fulfilled": True}},
-            )
+
+    if evt["type"] == "checkout.session.completed":
+        session = evt["data"]["object"]
+        if session.get("payment_status") == "paid":
+            txn = await db.payment_transactions.find_one({"session_id": session["id"]}, {"_id": 0})
+            if txn and not txn.get("fulfilled"):
+                await _grant_purchase(txn["user_id"], txn["tier_id"])
+                await db.payment_transactions.update_one(
+                    {"session_id": session["id"]},
+                    {"$set": {"status": "complete", "payment_status": "paid", "fulfilled": True}},
+                )
     return {"received": True}
 
 
@@ -518,12 +443,10 @@ async def stripe_webhook(request: Request):
 # Misc routes
 # ────────────────────────────────────────────────────────────────────────────
 APP_VERSION = "4.7.2"
-# Captured at import time so it reflects the deployed build, not the request time.
 BOOT_TIME = datetime.now(timezone.utc)
 
 
 def _build_commit() -> str:
-    """Best-effort git short SHA of the deployed build. Falls back to 'unknown'."""
     sha = os.environ.get("GIT_COMMIT") or os.environ.get("BUILD_SHA")
     if sha:
         return sha[:7]
@@ -547,7 +470,6 @@ async def root():
 
 @api_router.get("/health")
 async def health():
-    """Liveness + Mongo readiness probe. Safe to poll from uptime monitors."""
     db_ok = True
     db_error: Optional[str] = None
     try:
@@ -572,7 +494,6 @@ async def health():
 
 @api_router.get("/version")
 async def version():
-    """Deployed build metadata — useful for smoke-testing a fresh deploy."""
     return {
         "service": "aether-backend",
         "version": APP_VERSION,
@@ -588,10 +509,6 @@ class DesktopWaitlistRequest(BaseModel):
 
 @api_router.post("/waitlist/desktop")
 async def waitlist_desktop(payload: DesktopWaitlistRequest, request: Request):
-    """Collect emails for the native desktop build launch waitlist.
-    Idempotent per (email, platform) — resubmitting the same address updates
-    the timestamp rather than creating duplicates.
-    """
     email = payload.email.lower().strip()
     now = datetime.now(timezone.utc)
     doc = {
@@ -614,8 +531,6 @@ async def waitlist_desktop(payload: DesktopWaitlistRequest, request: Request):
 # Startup
 # ────────────────────────────────────────────────────────────────────────────
 FOUNDER_ACCOUNTS = [
-    # Full-access founder accounts. Passwords come from env; the defaults below
-    # are used only in dev/preview. Rotate in production via .env.
     {
         "name": "Braiden Barker",
         "email_env": "BRAIDEN_EMAIL",   "email_default": "braiden@aether.dev",
@@ -623,7 +538,6 @@ FOUNDER_ACCOUNTS = [
     },
 ]
 
-# Accounts to strip of founder/admin access on startup (demoted to standard users).
 DEMOTED_FOUNDER_EMAILS = ["byron@aether.dev"]
 
 
@@ -632,20 +546,18 @@ async def seed_admin():
     admin_pw = os.environ.get("ADMIN_PASSWORD", "admin123")
     existing = await db.users.find_one({"email": admin_email})
     if existing is None:
-        await db.users.insert_one(
-            {
-                "user_id": f"user_{uuid.uuid4().hex[:12]}",
-                "email": admin_email,
-                "name": "Aether Admin",
-                "picture": None,
-                "password_hash": hash_password(admin_pw),
-                "role": "admin",
-                "plan": "founding_builder",
-                "credits": 5000,
-                "provider": "email",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
-        )
+        await db.users.insert_one({
+            "user_id": f"user_{uuid.uuid4().hex[:12]}",
+            "email": admin_email,
+            "name": "Aether Admin",
+            "picture": None,
+            "password_hash": hash_password(admin_pw),
+            "role": "admin",
+            "plan": "founding_builder",
+            "credits": 5000,
+            "provider": "email",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
         logger.info(f"Seeded admin user: {admin_email}")
     elif not verify_password(admin_pw, existing["password_hash"]):
         await db.users.update_one({"email": admin_email}, {"$set": {"password_hash": hash_password(admin_pw)}})
@@ -653,37 +565,26 @@ async def seed_admin():
 
 
 async def seed_founders() -> None:
-    """Seed the two founder accounts (Braiden + Byron) with full access.
-
-    - role: 'admin' (unlocks any protected route)
-    - plan: 'founding_builder'  (highest tier)
-    - credits: 1_000_000        (effectively unlimited)
-    Idempotent: creates on first startup, refreshes plan/credits on subsequent
-    ones so the founders can never accidentally deplete themselves.
-    """
     for f in FOUNDER_ACCOUNTS:
         email = os.environ.get(f["email_env"], f["email_default"]).lower()
         pw = os.environ.get(f["pw_env"], f["pw_default"])
         existing = await db.users.find_one({"email": email})
         if existing is None:
-            await db.users.insert_one(
-                {
-                    "user_id": f"user_{uuid.uuid4().hex[:12]}",
-                    "email": email,
-                    "name": f["name"],
-                    "picture": None,
-                    "password_hash": hash_password(pw),
-                    "role": "admin",
-                    "plan": "founding_builder",
-                    "credits": 1_000_000,
-                    "provider": "email",
-                    "founder": True,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                }
-            )
+            await db.users.insert_one({
+                "user_id": f"user_{uuid.uuid4().hex[:12]}",
+                "email": email,
+                "name": f["name"],
+                "picture": None,
+                "password_hash": hash_password(pw),
+                "role": "admin",
+                "plan": "founding_builder",
+                "credits": 1_000_000,
+                "provider": "email",
+                "founder": True,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
             logger.info(f"Seeded founder: {email}")
         else:
-            # Refresh perms + reset credits to unlimited on every boot.
             updates = {
                 "role": "admin",
                 "plan": "founding_builder",
@@ -706,7 +607,6 @@ async def on_startup():
     await db.payment_transactions.create_index("session_id", unique=True)
     await seed_admin()
     await seed_founders()
-    # Demote any accounts removed from the founder list (revoke admin + founder flag).
     for demoted_email in DEMOTED_FOUNDER_EMAILS:
         existing = await db.users.find_one({"email": demoted_email})
         if existing is not None:
@@ -715,8 +615,6 @@ async def on_startup():
                 {"$set": {"role": "user", "founder": False}},
             )
             logger.info(f"Demoted former founder account: {demoted_email}")
-    # Also promote your existing accounts (if you've already signed up with a real email)
-    # to founder status so you don't have to switch accounts.
     for real_email in ["braidenbarker5@gmail.com"]:
         existing = await db.users.find_one({"email": real_email})
         if existing is not None:
@@ -738,7 +636,6 @@ async def on_shutdown():
     client.close()
 
 
-# CORS — credentials require explicit origin list. Allow any preview/origin via regex.
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=".*",
