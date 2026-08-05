@@ -1,22 +1,18 @@
 name: Aether Desktop · Cross-platform release
 
 # Builds the Tauri desktop wrapper for Windows / macOS / Linux and attaches
-# the artifacts to a GitHub Release when a `desktop-vX.Y.Z` tag is pushed.
+# the artifacts to a GitHub Release when a `desktop-vX.Y.Z` tag is pushed
+# or when triggered manually via workflow_dispatch.
 #
 # Usage:
-#   1. Push a tag matching the version in /aether-desktop/src-tauri/tauri.conf.json
-#      and /app/frontend/src/lib/releases.js (DESKTOP_VERSION):
-#        git tag desktop-v0.1.0
-#        git push origin desktop-v0.1.0
-#   2. This workflow fires, builds three OS matrix jobs, and creates a public
-#      GitHub Release with:
-#        - Aether_<version>_x64_en-US.msi   (Windows)
-#        - Aether_<version>_universal.dmg   (macOS Intel + Apple Silicon)
-#        - aether-desktop_<version>_amd64.AppImage  (Linux)
-#   3. The in-app Get Desktop / Download buttons then resolve to real URLs.
+#   1. Tag matching the version in aether-desktop/src-tauri/tauri.conf.json:
+#        git tag desktop-v0.1.0 && git push origin desktop-v0.1.0
+#   2. Or run manually from Actions → "Aether Desktop · Cross-platform release"
+#      and supply the tag (e.g. desktop-v0.1.0).
+#   3. The workflow builds MSI / DMG / AppImage and publishes a public release.
 #
-# No secrets required for unsigned builds. Add TAURI_PRIVATE_KEY / TAURI_KEY_PASSWORD
-# repo secrets later to enable Tauri auto-updater signing (see tauri.conf.json).
+# No secrets required for unsigned builds. Add TAURI_PRIVATE_KEY /
+# TAURI_KEY_PASSWORD later for auto-updater signing.
 
 on:
   push:
@@ -27,9 +23,10 @@ on:
       tag:
         description: "Release tag (e.g. desktop-v0.1.0)"
         required: true
+        type: string
 
 permissions:
-  contents: write   # required to create the GitHub Release + upload assets
+  contents: write
 
 jobs:
   build:
@@ -39,16 +36,19 @@ jobs:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            rust_targets: x86_64-pc-windows-msvc
             bundle: msi
-            asset_glob: "src-tauri/target/release/bundle/msi/*.msi"
+            asset_glob: "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi"
           - os: macos-latest
             target: universal-apple-darwin
+            rust_targets: x86_64-apple-darwin,aarch64-apple-darwin
             bundle: dmg
-            asset_glob: "src-tauri/target/release/bundle/dmg/*.dmg"
+            asset_glob: "src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg"
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
+            rust_targets: x86_64-unknown-linux-gnu
             bundle: appimage
-            asset_glob: "src-tauri/target/release/bundle/appimage/*.AppImage"
+            asset_glob: "src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage"
 
     runs-on: ${{ matrix.os }}
 
@@ -62,7 +62,7 @@ jobs:
           node-version: "20"
           cache: "yarn"
 
-      - name: Install Linux system deps (Ubuntu only)
+      - name: Install Linux system deps
         if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
@@ -73,12 +73,13 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             build-essential \
-            file
+            file \
+            patchelf
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: ${{ matrix.rust_targets }}
 
       - name: Rust build cache
         uses: swatinem/rust-cache@v2
@@ -86,7 +87,7 @@ jobs:
           workspaces: "aether-desktop/src-tauri -> target"
           key: ${{ matrix.target }}
 
-      - name: Install frontend deps (Aether dashboard)
+      - name: Install frontend deps
         working-directory: frontend
         run: yarn install --frozen-lockfile
 
@@ -94,7 +95,6 @@ jobs:
         working-directory: frontend
         env:
           CI: "true"
-          # Desktop build talks to localhost bridge — override at runtime if needed.
           REACT_APP_BACKEND_URL: "http://127.0.0.1:8001"
         run: yarn build
 
@@ -114,30 +114,50 @@ jobs:
         with:
           name: aether-${{ matrix.bundle }}
           path: aether-desktop/${{ matrix.asset_glob }}
-          if-no-files-found: error
-          retention-days: 7
+          if-no-files-found: warn
+          retention-days: 14
 
   release:
     needs: build
     runs-on: ubuntu-22.04
+    # Continue even if one platform failed so successful artifacts still ship
+    if: always() && (needs.build.result == 'success' || needs.build.result == 'failure')
     steps:
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          merge-multiple: true
 
-      - name: Flatten artifacts
+      - name: Flatten & list artifacts
         run: |
           mkdir -p release
-          find artifacts -type f \( -iname '*.msi' -o -iname '*.dmg' -o -iname '*.AppImage' \) -exec cp {} release/ \;
-          ls -la release/
+          find artifacts -type f \( -iname '*.msi' -o -iname '*.dmg' -o -iname '*.AppImage' \) -exec cp -v {} release/ \; || true
+          echo "=== Release files ==="
+          ls -la release/ || echo "(no files)"
+          if [ -z "$(ls -A release 2>/dev/null)" ]; then
+            echo "No installers were produced. Aborting release."
+            exit 1
+          fi
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name || inputs.tag }}
-          name: Aether Desktop ${{ github.ref_name || inputs.tag }}
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: Aether Repair Tool ${{ github.event.inputs.tag || github.ref_name }}
           draft: false
           prerelease: false
           generate_release_notes: true
+          body: |
+            ## Aether Repair Tool · ${{ github.event.inputs.tag || github.ref_name }}
+
+            Native desktop builds of the Aether repair console.
+
+            | Platform | File |
+            |----------|------|
+            | Windows x64 | `.msi` |
+            | macOS (Intel + Apple Silicon) | `.dmg` |
+            | Linux x64 | `.AppImage` |
+
+            Open the installer → the app appears in Start Menu / Applications and launches the full dashboard in a native window.
           files: release/*
