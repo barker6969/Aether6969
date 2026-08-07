@@ -3,7 +3,8 @@ import { ActionGrid, SAMSUNG_ACTIONS } from "../components/ActionGrid";
 import { DeviceInfoPanel } from "../components/DeviceInfoPanel";
 import { Console } from "../components/Console";
 import { useApp } from "../context/AppContext";
-import { Smartphone, AlertTriangle, ShieldAlert, Usb, Loader2 } from "lucide-react";
+import { Smartphone, AlertTriangle, ShieldAlert, ShieldOff, Usb, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 // Models where Heimdall partition writes still succeed reliably (Knox 2.x
 // and earlier). Newer models may fall through to read-only operations.
@@ -36,7 +37,7 @@ export default function SamsungService() {
         <div className="flex-1">
           <h1 className="text-xl font-bold tracking-tight">Samsung Service Module</h1>
           <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-white/40 mt-1">
-            Odin · Download Mode · Heimdall {heimdallReady || "v?"} · Loke protocol
+            Odin · Download Mode · Heimdall {heimdallReady || "v?"} · Aegis Unlock
           </p>
         </div>
         <div className="text-right">
@@ -63,6 +64,26 @@ export default function SamsungService() {
             {status === "searching" ? "Scanning…" : "Connect Samsung"}
           </button>
         )}
+      </div>
+
+      {/* Aegis Unlock callout */}
+      <div
+        data-testid="samsung-aegis-banner"
+        className="bg-[#00FF41]/[0.04] border border-[#00FF41]/25 px-4 py-3 flex items-start gap-3 flex-shrink-0"
+      >
+        <ShieldOff className="w-4 h-4 text-[#00FF41] mt-0.5 flex-shrink-0" strokeWidth={2} />
+        <div className="flex-1 font-mono text-[11px] text-white/65 leading-relaxed">
+          <span className="text-[#00FF41] font-semibold">Aegis Unlock</span>
+          {" "}— clear the Google post-reset guard after a factory reset on{" "}
+          <span className="text-white/85">Download Mode</span> targets (best on S9 / Note 9 /
+          older A-series). Requires Heimdall. See Knox note below for limits on S10+.{" "}
+          <Link
+            to="/docs/samsung-aegis-unlock"
+            className="text-[#00FF41] underline decoration-dotted hover:text-[#00CC33]"
+          >
+            Samsung Aegis guide
+          </Link>
+        </div>
       </div>
 
       {/* Setup banner — only when bridge is live but Heimdall isn't found. */}
@@ -103,7 +124,7 @@ export default function SamsungService() {
         <ShieldAlert className="w-4 h-4 text-[#4d8bff] mt-0.5 flex-shrink-0" strokeWidth={2} />
         <div className="flex-1 font-mono text-[11px] text-white/60 leading-relaxed">
           <span className="text-white/80 font-semibold">Knox compatibility:</span>{" "}
-          partition writes (factory reset, Aegis Unlock) succeed reliably on{" "}
+          partition writes (factory reset, <span className="text-[#00FF41]">Aegis Unlock</span>) succeed reliably on{" "}
           <span className="text-[#00FF41]">Galaxy S9 / Note 9 / older A-series</span>.{" "}
           <span className="text-yellow-300">Galaxy S10–S22</span> may reject writes
           (Knox 3.x signing requirement).{" "}
@@ -134,7 +155,7 @@ export default function SamsungService() {
       {/* Supported models chip cloud */}
       <div className="bg-[#09090B] border border-white/10 p-4 flex-shrink-0">
         <div className="font-mono text-[10px] tracking-[0.25em] uppercase text-white/50 mb-3">
-          Known-good · Heimdall writes succeed
+          Known-good · Heimdall writes / Aegis succeed
         </div>
         <div className="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto">
           {KNOWN_GOOD.map((s) => (
@@ -151,7 +172,7 @@ export default function SamsungService() {
           ))}
         </div>
         <div className="font-mono text-[10px] tracking-[0.25em] uppercase text-yellow-400/70 mt-4 mb-2">
-          Knox 3.x limited · read-only
+          Knox 3.x limited · read-only / Aegis may fail
         </div>
         <div className="flex flex-wrap gap-1.5 max-h-[60px] overflow-y-auto">
           {KNOX_LIMITED.map((s) => (
