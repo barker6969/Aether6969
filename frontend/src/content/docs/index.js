@@ -52,6 +52,7 @@ Keep these for at least 12 months in case of a Samsung enterprise audit.
 
 ## Related guides
 
+- Samsung Aegis Unlock
 - MTK BROM Aegis Unlock
 - Qualcomm EDL IMEI Repair
 `;
@@ -61,10 +62,11 @@ const mtkFrp = `# MTK BROM — Aegis Unlock
 > **Audience:** Repair technicians servicing MediaTek devices.
 > **Cost:** FREE — included in Solo Builder and above.
 > **Platforms:** MT6580 → MT6985 (Dimensity 9300).
+> **Brand:** **Aegis Unlock** is Aether’s name for clearing the Android post-reset Google account guard (often called FRP in the trade).
 
 ## Background
 
-When a Google account is removed from an Android device using a non-standard process (e.g. factory reset before logout), the post-reset account guard flag is left active. The device boots, but blocks setup with a Google account prompt. Aether's MTK Aegis Unlock uses the **BROM (Boot ROM)** download mode to patch the guard flag without re-flashing the entire firmware.
+When a Google account is removed from an Android device using a non-standard process (e.g. factory reset before logout), the post-reset account guard flag is left active. The device boots, but blocks setup with a Google account prompt. Aether's MTK **Aegis Unlock** uses the **BROM (Boot ROM)** download mode to patch the guard flag without re-flashing the entire firmware.
 
 ## How it works
 
@@ -82,6 +84,7 @@ When a Google account is removed from an Android device using a non-standard pro
 4. Go to **MTK Service → Aegis Unlock**.
 5. Click **Aegis Unlock**. The console will stream:
    \`\`\`
+   [INFO]    Initiating Aegis Unlock sequence ...
    [INFO]    Sending DA (Download Agent) to preloader...
    [INFO]    Reading partition table from emmc_user ...
    [INFO]    Locating frp partition @ 0x...
@@ -90,6 +93,16 @@ When a Google account is removed from an Android device using a non-standard pro
    [SUCCESS] Aegis Unlock complete. Reboot device to apply.
    \`\`\`
 6. Unplug USB. Power on. Complete setup with no Google account prompt.
+
+## CLI
+
+With the local bridge running:
+
+\`\`\`
+aether-cli bypass-frp auto
+\`\`\`
+
+(Same operation; UI label is **Aegis Unlock**.)
 
 ## Anti-rollback
 
@@ -102,7 +115,55 @@ Devices with \`anti-rollback counter >= 8\` require an upgraded DA. Aether autom
 
 ## Best practice
 
-Always perform an \`adb backup\` of the customer's data **before** the operation. Aegis Unlock is non-destructive, but unrelated user data can be lost if the wrong DA fires.
+Always perform an \`adb backup\` of the customer's data **before** the operation when possible. Aegis Unlock targets only the account-guard flag, but unrelated user data can be lost if the wrong DA fires.
+
+## Related guides
+
+- Samsung Aegis Unlock
+- Qualcomm EDL IMEI Repair
+`;
+
+const samsungAegis = `# Samsung — Aegis Unlock
+
+> **Audience:** Licensed Samsung repair technicians.
+> **Cost:** 20 credits (Standard Aegis on MTK remains free).
+> **Best results:** Galaxy S9 / Note 9 / older A-series (Knox 2.x class).
+> **Protocol:** Download Mode · Heimdall (Odin/Loke).
+
+## What Aegis Unlock does on Samsung
+
+After a factory reset, some devices still prompt for the previous Google account (post-reset account guard). **Aegis Unlock** clears that guard so setup can complete for a device you are authorized to service.
+
+This is **not** Knox Guard removal, **not** FRP token theft for arbitrary accounts, and **not** iPhone passcode recovery.
+
+## Prerequisites
+
+1. Device in **Download Mode** (Vol-Down + Bixby/Vol-Up + Power, then Vol-Up to confirm).
+2. **Heimdall** installed and on PATH (\`aether-cli doctor\`).
+3. Data cable that supports data (not charge-only).
+4. Customer authorization / proof of ownership for the job.
+
+## Procedure
+
+1. Connect the phone in Download Mode.
+2. Open **Samsung Service** → run **Detect Device** if needed.
+3. Click **Aegis Unlock**.
+4. Watch the console for SUCCESS, then reboot and complete Android setup.
+
+## Knox limits
+
+| Class | Expectation |
+| --- | --- |
+| S9 / Note 9 / older A | Partition writes usually succeed |
+| S10–S22 (Knox 3.x) | Writes may be rejected |
+| S23+ / foldables | Not supported in Aether |
+
+See the on-page Knox banner in Samsung Service for the same matrix.
+
+## Related guides
+
+- MTK BROM Aegis Unlock
+- Samsung KG Suspend
 `;
 
 const qcImei = `# Qualcomm EDL — IMEI Repair
@@ -155,6 +216,7 @@ Always confirm the dial-code result matches both IMEIs you intended to write. If
 ## Related guides
 
 - MTK BROM Aegis Unlock
+- Samsung Aegis Unlock
 - Samsung KG Suspend
 `;
 
@@ -176,6 +238,15 @@ export const DOCS = [
     minutes: 5,
     cost: "Free",
     body: mtkFrp,
+  },
+  {
+    slug: "samsung-aegis-unlock",
+    title: "Samsung — Aegis Unlock",
+    summary: "Clear post-reset Google guard in Download Mode (S9 / Note 9 class).",
+    platform: "Samsung",
+    minutes: 6,
+    cost: "20 credits",
+    body: samsungAegis,
   },
   {
     slug: "qualcomm-edl-imei-repair",
