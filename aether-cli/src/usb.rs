@@ -92,6 +92,10 @@ fn classify(desc: &DeviceDescriptor) -> Option<&'static str> {
     }
 }
 
+fn is_apple_mode(tag: &str) -> bool {
+    tag.starts_with("Apple ")
+}
+
 /// JSON representation of the current USB device list — used by the bridge.
 pub fn devices_as_json() -> Result<Vec<Value>> {
     let mut out = Vec::new();
@@ -141,6 +145,93 @@ pub fn list_devices() -> Result<()> {
             "Plug in a device in BROM / EDL / DFU / Download mode and retry.".dimmed()
         );
     }
+    Ok(())
+}
+
+/// Detect Apple devices in DFU / Recovery / normal USB mode.
+///
+/// Detection only — does not unlock, bypass passcode, or flash firmware.
+/// Forgotten-passcode recovery is Apple's official Restore (erases the device):
+/// Finder on macOS, or Apple Devices / iTunes on Windows.
+pub fn detect_apple() -> Result<()> {
+    println!(
+        "  {} {}",
+        "→".bright_green(),
+        "Apple DFU / Recovery detection (USB only — no unlock)".bright_white().bold()
+    );
+    println!();
+
+    let devices = enumerate();
+    let mut found: Vec<(String, &'static str)> = Vec::new();
+
+    for (d, desc) in &devices {
+        if let Some(tag) = classify(desc) {
+            if is_apple_mode(tag) {
+                found.push((fmt_device(d, desc), tag));
+            }
+        }
+    }
+
+    if found.is_empty() {
+        println!(
+            "  {} {}",
+            "○".yellow(),
+            "No Apple device in DFU, Recovery, or restore USB mode."
+        );
+        println!();
+        println!("{}", "  How to put an iPhone into Recovery or DFU (authorized device only):".dimmed());
+        println!("{}", "    1. Use a data-capable USB cable (not charge-only).".dimmed());
+        println!("{}", "    2. Recovery: follow Apple's button sequence for your model until".dimmed());
+        println!("{}", "       the cable/computer icon appears.".dimmed());
+        println!("{}", "    3. DFU: follow Apple's DFU sequence for your model (screen stays black).".dimmed());
+        println!("{}", "    4. Re-run:  aether-cli apple-detect".dimmed());
+        println!();
+        println!(
+            "  {}",
+            "Host tip: Windows needs Apple USB drivers (Apple Devices / iTunes).".dimmed()
+        );
+        return Ok(());
+    }
+
+    for (line, tag) in &found {
+        println!("{}", format!("{}  ← {}", line, tag).bright_green().bold());
+    }
+
+    println!();
+    println!(
+        "  {} {} Apple USB target(s) detected.",
+        "✓".bright_green(),
+        found.len()
+    );
+    println!();
+    println!("{}", "  Next step — forgotten passcode (official erase only):".bright_white());
+    println!(
+        "{}",
+        "    • macOS: open Finder → select the iPhone → Restore".dimmed()
+    );
+    println!(
+        "{}",
+        "    • Windows: open Apple Devices (or iTunes) → Restore".dimmed()
+    );
+    println!(
+        "{}",
+        "    • Restore downloads a signed IPSW from Apple and wipes the device.".dimmed()
+    );
+    println!(
+        "{}",
+        "    • If Find My / Activation Lock is on, Apple ID credentials (or".dimmed()
+    );
+    println!(
+        "{}",
+        "      Apple Support + proof of purchase) are still required after erase.".dimmed()
+    );
+    println!();
+    println!(
+        "  {}",
+        "Aether does not remove passcodes or bypass Activation Lock."
+            .yellow()
+    );
+
     Ok(())
 }
 
