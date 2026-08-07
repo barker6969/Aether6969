@@ -40,7 +40,15 @@ const ICONS = {
 };
 
 const DEFAULT_ACTIONS = [
-  { key: "bypass_frp",        label: "Aegis Unlock",        icon: "ShieldOff", danger: false, testid: "action-bypass-frp", cost: "Free" },
+  {
+    key: "bypass_frp",
+    label: "Aegis Unlock",
+    icon: "ShieldOff",
+    danger: false,
+    testid: "action-bypass-frp",
+    cost: "Free",
+    desc: "Clear post-reset account guard (Android FRP) via BROM/EDL",
+  },
   { key: "repair_imei",       label: "Repair IMEI",         icon: "Hash",      danger: false, testid: "action-repair-imei", cost: "5 Credits" },
   { key: "unlock_bootloader", label: "Unlock Bootloader",   icon: "Unlock",    danger: true,  testid: "action-unlock-bootloader", cost: "10 Credits" },
   { key: "erase_userdata",    label: "Erase Userdata",      icon: "Eraser",    danger: true,  testid: "action-erase-userdata", cost: "Free" },
@@ -62,6 +70,7 @@ const ActionButton = ({ action, isActive, isDisabled, onClick }) => {
       data-testid={action.testid}
       disabled={isDisabled}
       onClick={onClick}
+      title={action.desc || undefined}
       className={`group relative bg-[#09090B] p-4 flex flex-col items-start gap-2 transition-colors min-h-[110px] text-left ${stateClass} ${activeBg}`}
     >
       <div className="flex items-center justify-between w-full">
@@ -82,9 +91,15 @@ const ActionButton = ({ action, isActive, isDisabled, onClick }) => {
         <div className="text-white text-sm font-semibold tracking-tight leading-snug">
           {action.label}
         </div>
-        <div className="font-mono text-[10px] text-white/40 mt-1 uppercase tracking-[0.15em]">
-          {kindLabel}
-        </div>
+        {action.desc ? (
+          <div className="font-mono text-[10px] text-white/45 mt-1 leading-snug line-clamp-2">
+            {action.desc}
+          </div>
+        ) : (
+          <div className="font-mono text-[10px] text-white/40 mt-1 uppercase tracking-[0.15em]">
+            {kindLabel}
+          </div>
+        )}
       </div>
       {isActive && (
         <span className="absolute top-2 right-2 font-mono text-[9px] text-[#00FF41] tracking-[0.2em]">
@@ -151,16 +166,46 @@ export const ActionGrid = ({ platform = "MediaTek", actions, title }) => {
 
 // Pre-built action lists for each platform module
 export const MTK_ACTIONS = [
-  ...DEFAULT_ACTIONS,
+  {
+    key: "bypass_frp",
+    label: "Aegis Unlock",
+    icon: "ShieldOff",
+    danger: false,
+    testid: "action-bypass-frp",
+    cost: "Free",
+    desc: "BROM · clear Google post-reset guard without full reflash",
+  },
+  { key: "repair_imei",       label: "Repair IMEI",         icon: "Hash",      danger: false, testid: "action-repair-imei", cost: "5 Credits" },
+  { key: "unlock_bootloader", label: "Unlock Bootloader",   icon: "Unlock",    danger: true,  testid: "action-unlock-bootloader", cost: "10 Credits" },
+  { key: "erase_userdata",    label: "Erase Userdata",      icon: "Eraser",    danger: true,  testid: "action-erase-userdata", cost: "Free" },
   { key: "mi_account_bypass", label: "Mi Account Bypass", icon: "Cloud",     danger: false, testid: "action-mi-account",   cost: "20 Credits" },
   { key: "read_codes",        label: "Read Lockscreen",    icon: "KeyRound",  danger: false, testid: "action-read-codes",   cost: "8 Credits" },
-  { key: "read_frp_token",    label: "Read Aegis Token",   icon: "Fingerprint", danger: false, testid: "action-read-frp",   cost: "3 Credits" },
+  {
+    key: "read_frp_token",
+    label: "Read Aegis Token",
+    icon: "Fingerprint",
+    danger: false,
+    testid: "action-read-frp",
+    cost: "3 Credits",
+    desc: "Extract account-guard token blob for audit / support",
+  },
   { key: "boot_repair",       label: "Boot Repair",        icon: "Wrench",    danger: false, testid: "action-boot-repair",  cost: "10 Credits" },
 ];
 
 export const QC_ACTIONS = [
   { key: "enter_edl",         label: "Enter EDL (no cable)", icon: "Zap",     danger: false, testid: "action-enter-edl",    cost: "Free" },
-  ...DEFAULT_ACTIONS,
+  {
+    key: "bypass_frp",
+    label: "Aegis Unlock",
+    icon: "ShieldOff",
+    danger: false,
+    testid: "action-bypass-frp-qc",
+    cost: "Free",
+    desc: "EDL 9008 · clear post-reset account guard",
+  },
+  { key: "repair_imei",       label: "Repair IMEI",         icon: "Hash",      danger: false, testid: "action-repair-imei", cost: "5 Credits" },
+  { key: "unlock_bootloader", label: "Unlock Bootloader",   icon: "Unlock",    danger: true,  testid: "action-unlock-bootloader", cost: "10 Credits" },
+  { key: "erase_userdata",    label: "Erase Userdata",      icon: "Eraser",    danger: true,  testid: "action-erase-userdata", cost: "Free" },
   { key: "knox_suspend",      label: "Samsung KG Suspend", icon: "Lock",      danger: false, testid: "action-knox-suspend", cost: "15 Credits" },
   { key: "carrier_unlock",    label: "Carrier Unlock",     icon: "Wifi",      danger: false, testid: "action-carrier-unlock", cost: "12 Credits" },
   { key: "demo_unit_disable", label: "Disable Demo Mode",  icon: "Tag",       danger: false, testid: "action-demo-disable", cost: "4 Credits" },
@@ -175,12 +220,17 @@ export const IPHONE_ACTIONS = [
 ];
 
 // Samsung — Heimdall (Odin protocol) operations.
-// `factory_reset` is the headline action: erases USERDATA partition, which
-// drops the device to its setup-wizard state. Works on Galaxy S9 / Note 9
-// and older A-series; newer Knox 3.x models may reject the write.
 export const SAMSUNG_ACTIONS = [
   { key: "samsung_detect",        label: "Detect Device",      icon: "Search",       danger: false, testid: "action-samsung-detect",  cost: "Free" },
   { key: "samsung_read_pit",      label: "Read PIT Table",     icon: "Hash",         danger: false, testid: "action-samsung-pit",     cost: "Free" },
   { key: "samsung_factory_reset", label: "Factory Reset",      icon: "Eraser",       danger: true,  testid: "action-samsung-reset",   cost: "15 Credits" },
-  { key: "bypass_frp",            label: "Aegis Unlock",       icon: "ShieldOff",    danger: false, testid: "action-samsung-frp",     cost: "20 Credits" },
+  {
+    key: "bypass_frp",
+    label: "Aegis Unlock",
+    icon: "ShieldOff",
+    danger: false,
+    testid: "action-samsung-frp",
+    cost: "20 Credits",
+    desc: "Download Mode · clear Google guard after factory reset (S9 / Note 9 class)",
+  },
 ];
