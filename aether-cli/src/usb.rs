@@ -69,6 +69,10 @@ fn fmt_device<T: UsbContext>(d: &Device<T>, desc: &DeviceDescriptor) -> String {
 }
 
 /// Match a USB device against known repair-mode signatures.
+///
+/// Apple (VID 0x05ac) DFU / Recovery PIDs vary by model and iOS generation.
+/// Detection only — no unlock, no passcode bypass. Official erase/restore is
+/// done via Finder / Apple Devices / iTunes once Recovery or DFU is visible.
 fn classify(desc: &DeviceDescriptor) -> Option<&'static str> {
     match (desc.vendor_id(), desc.product_id()) {
         // MediaTek BROM / Preloader
@@ -76,9 +80,12 @@ fn classify(desc: &DeviceDescriptor) -> Option<&'static str> {
         // Qualcomm EDL 9008 / Sahara
         (0x05c6, 0x9008) => Some("Qualcomm EDL 9008 (Sahara)"),
         (0x05c6, 0x900e) => Some("Qualcomm Diag"),
-        // Apple DFU / Recovery
+        // Apple DFU (common across many iPhone / iPad generations)
         (0x05ac, 0x1227) => Some("Apple DFU mode"),
-        (0x05ac, 0x1281) => Some("Apple Recovery mode"),
+        // Apple Recovery Mode (several PIDs used across models)
+        (0x05ac, 0x1281) | (0x05ac, 0x1283) | (0x05ac, 0x1222) => Some("Apple Recovery mode"),
+        // Apple mobile device in normal / restore-capable mode (not DFU)
+        (0x05ac, 0x12a8) | (0x05ac, 0x12ab) => Some("Apple device (normal / restore)"),
         // Samsung Download mode
         (0x04e8, 0x685d) => Some("Samsung Download mode"),
         _ => None,
