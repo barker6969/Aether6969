@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { colors } from "../theme";
 import { useAppState } from "../context/AppState";
+import { useCliBridge } from "../context/CliBridgeContext";
 import { DESKTOP_RELEASE, PLATFORMS } from "../data/services";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -18,14 +19,15 @@ type Props = {
 
 export function HomeScreen({ navigation }: Props) {
   const { credits, pushLog } = useAppState();
+  const bridge = useCliBridge();
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
       <Text style={styles.kicker}>AETHER REPAIR · MOBILE</Text>
       <Text style={styles.title}>Technician companion</Text>
       <Text style={styles.sub}>
-        Credits, docs, and service catalog on the go. Live USB (BROM / EDL / DFU)
-        runs on the desktop suite + aether-cli.
+        Wired to aether-cli over Wi‑Fi. Put the target phone on the PC USB bus;
+        this app remote-controls BROM / EDL / Samsung jobs.
       </Text>
 
       <View style={styles.row}>
@@ -34,10 +36,36 @@ export function HomeScreen({ navigation }: Props) {
           <Text style={styles.statValue}>{credits} Credits</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={styles.statLabel}>DESKTOP</Text>
-          <Text style={[styles.statValue, { fontSize: 14 }]}>v0.1.0</Text>
+          <Text style={styles.statLabel}>BRIDGE</Text>
+          <Text
+            style={[
+              styles.statValue,
+              {
+                fontSize: 14,
+                color:
+                  bridge.status === "connected"
+                    ? colors.green
+                    : bridge.status === "connecting"
+                      ? colors.yellow
+                      : colors.muted,
+              },
+            ]}
+          >
+            {bridge.status.toUpperCase()}
+          </Text>
         </View>
       </View>
+
+      {bridge.status !== "connected" && (
+        <Pressable
+          style={styles.warnBtn}
+          onPress={() => navigation.navigate("Settings" as never)}
+        >
+          <Text style={styles.warnText}>
+            Bridge offline · Settings → PC IP + enable
+          </Text>
+        </Pressable>
+      )}
 
       <Pressable
         style={styles.primaryBtn}
@@ -68,7 +96,7 @@ export function HomeScreen({ navigation }: Props) {
       >
         <Text style={[styles.cardTitle, { color: colors.green }]}>Aegis Unlock</Text>
         <Text style={styles.cardSub}>
-          Android post-reset Google guard · MTK free · Samsung credits
+          Live mtk.frp_bypass when bridge is connected
         </Text>
       </Pressable>
     </ScrollView>
@@ -107,6 +135,18 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
   },
   statValue: { color: colors.green, fontSize: 18, fontWeight: "600", marginTop: 4 },
+  warnBtn: {
+    borderWidth: 1,
+    borderColor: "rgba(250,204,21,0.4)",
+    padding: 10,
+    marginBottom: 12,
+  },
+  warnText: {
+    color: colors.yellow,
+    fontSize: 11,
+    fontFamily: "monospace",
+    textAlign: "center",
+  },
   primaryBtn: {
     backgroundColor: colors.greenDim,
     borderWidth: 1,
