@@ -36,8 +36,9 @@ will be small (~3–4 MB) and fast.
 
 ```bash
 ./target/release/aether-cli devices
-./target/release/aether-cli scan         # watch hot-plug events
-./target/release/aether-cli serve        # start the WebSocket bridge
+./target/release/aether-cli scan          # watch hot-plug events
+./target/release/aether-cli apple-detect  # iPhone/iPad DFU / Recovery USB check
+./target/release/aether-cli serve         # start the WebSocket bridge
 ```
 
 ---
@@ -48,11 +49,24 @@ will be small (~3–4 MB) and fast.
 | --- | --- | --- |
 | `devices` | ✅ real | List all attached USB devices, highlight known repair-mode signatures. |
 | `scan` | ✅ real | Continuously watch for hot-plug attach / detach events. |
+| `apple-detect` | ✅ real | Detect iPhone/iPad in DFU / Recovery / restore USB mode. **Detection only** — no unlock. Points to Apple's official Restore (erase) for forgotten passcode. |
 | `info <port>` | 🟡 stub | Read chipset, IMEI, serial from the target. |
 | `bypass-frp <port>` | 🟡 stub | MTK BROM / Qualcomm EDL Factory Reset Protection bypass. |
 | `repair-imei <port> --imei1 <I> [--imei2 <I>]` | 🟡 stub | Write IMEI(s) to modem NV partition. Luhn-validated. |
 | `unlock-bootloader <port>` | 🟡 stub | OEM bootloader unlock. **Destructive** — erases userdata. |
+| `samsung-detect` | 🟡 | Samsung Download Mode via Heimdall. |
 | `serve [--addr 127.0.0.1:8765]` | 🟡 echo stub | Local WebSocket bridge for the Aether dashboard. |
+
+### Apple DFU / Recovery (`apple-detect`)
+
+```bash
+aether-cli apple-detect
+```
+
+When a device is in DFU or Recovery, the CLI prints the USB identity and reminds
+you that a forgotten passcode is handled by **Finder (macOS)** or **Apple Devices /
+iTunes (Windows) → Restore**, which erases the device. Aether does not remove
+passcodes or bypass Activation Lock.
 
 ---
 
@@ -65,7 +79,7 @@ that mirror what real implementations expose. To add real behaviour:
 | --- | --- |
 | `exploits/frp.rs` and `exploits/imei.rs` (MTK side) | https://github.com/bkerler/mtkclient — port the BROM + DA flow to Rust, or shell out to it. |
 | `exploits/frp.rs` and `exploits/imei.rs` (Qualcomm) | https://github.com/bkerler/edl — Firehose + Sahara handling. |
-| `exploits/*.rs` (Apple) | https://github.com/checkra1n/pongoOS — checkm8 payload loading. |
+| `exploits/*.rs` (Apple) | Not used for passcode removal. DFU detection is in `usb.rs`. Official erase is Finder / Apple Devices. |
 | `exploits/*.rs` (Samsung Download) | https://github.com/Benjamin-Dobell/Heimdall — Odin protocol reverse-engineered. |
 
 > ⚠️ **Legal notice.** Some exploit code is region- or device-specific and may
