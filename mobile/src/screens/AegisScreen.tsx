@@ -2,56 +2,72 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, Linking } from "react-native";
 import { colors } from "../theme";
 import { useAppState } from "../context/AppState";
+import { useCliBridge } from "../context/CliBridgeContext";
 import { DESKTOP_RELEASE } from "../data/services";
 
 export function AegisScreen() {
-  const { runDemoAction } = useAppState();
+  const { runAction, activeAction } = useAppState();
+  const bridge = useCliBridge();
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
       <Text style={styles.kicker}>AEGIS UNLOCK</Text>
       <Text style={styles.title}>Android account guard</Text>
       <Text style={styles.body}>
-        Aegis is Aether’s brand for clearing the post-reset Google account prompt
-        on Android (often called FRP in the trade). It is not iPhone passcode
-        recovery and not permanent Knox Guard removal.
+        Aegis clears the post-reset Google account prompt on Android (FRP-class).
+        Not iPhone passcode recovery. Live path: aether-cli mtk.frp_bypass over the
+        LAN bridge.
+      </Text>
+
+      <Text
+        style={[
+          styles.bridge,
+          { color: bridge.status === "connected" ? colors.green : colors.yellow },
+        ]}
+      >
+        Bridge {bridge.status.toUpperCase()} · {bridge.url}
       </Text>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>MediaTek · Standard (Free)</Text>
         <Text style={styles.cardBody}>
-          BROM mode · DA payload · patch guard flag · no full reflash.
+          BROM · DA · mtk.frp_bypass — phone must be in BROM on the bench PC.
         </Text>
         <Pressable
           style={styles.btn}
-          onPress={() => runDemoAction("Aegis Unlock (MTK)", true)}
+          disabled={!!activeAction}
+          onPress={() => runAction("bypass_frp", "Aegis Unlock (MTK)", true)}
         >
-          <Text style={styles.btnText}>RUN ON DESKTOP · MTK</Text>
+          <Text style={styles.btnText}>
+            {activeAction ? "RUNNING…" : "RUN AEGIS · MTK"}
+          </Text>
         </Pressable>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Samsung · 20 Credits</Text>
         <Text style={styles.cardBody}>
-          Download Mode + Heimdall. Best on S9 / Note 9 / older A-series. Knox
-          3.x may reject writes.
+          Download Mode + Heimdall on desktop. Same bridge when mapped; use
+          Samsung module for detect / factory reset live jobs.
         </Text>
         <Pressable
           style={styles.btn}
-          onPress={() => runDemoAction("Aegis Unlock (Samsung)", true)}
+          disabled={!!activeAction}
+          onPress={() => runAction("bypass_frp", "Aegis Unlock (Samsung)", true)}
         >
-          <Text style={styles.btnText}>RUN ON DESKTOP · SAMSUNG</Text>
+          <Text style={styles.btnText}>RUN AEGIS · SAMSUNG</Text>
         </Pressable>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Qualcomm · Free</Text>
-        <Text style={styles.cardBody}>EDL 9008 path when device is in Sahara.</Text>
+        <Text style={styles.cardBody}>EDL path when device is in Sahara on the PC.</Text>
         <Pressable
           style={styles.btn}
-          onPress={() => runDemoAction("Aegis Unlock (Qualcomm)", true)}
+          disabled={!!activeAction}
+          onPress={() => runAction("bypass_frp", "Aegis Unlock (Qualcomm)", true)}
         >
-          <Text style={styles.btnText}>RUN ON DESKTOP · QC</Text>
+          <Text style={styles.btnText}>RUN AEGIS · QC</Text>
         </Pressable>
       </View>
 
@@ -78,7 +94,12 @@ const styles = StyleSheet.create({
     marginTop: 6,
     marginBottom: 10,
   },
-  body: { color: colors.muted, fontSize: 13, lineHeight: 20, marginBottom: 16 },
+  body: { color: colors.muted, fontSize: 13, lineHeight: 20, marginBottom: 12 },
+  bridge: {
+    fontSize: 11,
+    fontFamily: "monospace",
+    marginBottom: 14,
+  },
   card: {
     backgroundColor: colors.panel,
     borderWidth: 1,
