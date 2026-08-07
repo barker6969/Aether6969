@@ -1,6 +1,6 @@
 # Aether Repair Tool
 
-**Canonical monorepo** for the Aether phone-repair platform — desktop app, CLI, web dashboard, and API.
+**Canonical monorepo** for the Aether phone-repair platform — desktop app, CLI, web dashboard, mobile companion, and API.
 
 > Other repos (`aether`, `aether-phones`, `Aether69`, `aether.exe`) are historical / mirrors. **Develop and release from this repo only.**
 
@@ -13,6 +13,7 @@
 | **Desktop app** (Tauri 2) | `aether-desktop/` | MSI / DMG / AppImage via GitHub Actions |
 | **Local CLI** (USB bridge) | `aether-cli/` | Real USB scan · Apple DFU detect · Samsung/MTK stubs |
 | **Web dashboard** | `frontend/` | React UI · download buttons → GitHub Releases |
+| **Mobile companion** | `mobile/` | Expo (React Native) · catalog, Aegis, docs |
 | **API backend** | `backend/` | FastAPI · auth · Mongo |
 | **Public download page** | `download/` | Static page for installers |
 | **Marketing** | `marketing/` | Landing / copy assets |
@@ -37,6 +38,9 @@ Release page: https://github.com/barker6969/Aether6969/releases/tag/desktop-v0.1
 ```bash
 # Frontend
 cd frontend && npm install && npm start
+
+# Mobile companion (Expo)
+cd mobile && npm install && npm start
 
 # Backend
 cd backend && python -m venv .venv && source .venv/bin/activate
@@ -63,6 +67,16 @@ Or tag and use the workflow inputs for `desktop-vX.Y.Z`.
 
 ---
 
+## Mobile companion
+
+Path: `mobile/` — Expo app with Home, Aegis Unlock hub, Console, Docs, Settings.
+
+**USB repair stays on desktop.** Phone UI is catalog + guidance + links to MSI/DMG.
+
+See [mobile/README.md](./mobile/README.md).
+
+---
+
 ## CLI highlights
 
 | Command | What it does |
@@ -81,7 +95,7 @@ Apple path is **detection + official erase/restore only**. No passcode bypass.
 
 | Former repo | What we kept here |
 |-------------|-------------------|
-| **Aether6969** | Tauri desktop CI, live MSI/DMG/AppImage, `apple-detect`, download page, marketing |
+| **Aether6969** | Tauri desktop CI, live MSI/DMG/AppImage, `apple-detect`, download page, marketing, mobile |
 | **aether** | Dev/Docker docs pattern, deploy checklists (adapted; Electron builds superseded by Tauri) |
 | **aether-phones** | Backend deps cleaned for Vercel (no private PyPI package) |
 | **Aether69 / aether.exe** | Older mirrors — do not develop there |
@@ -97,6 +111,7 @@ Aether6969/
 ├── aether-desktop/     # Tauri 2 wrapper
 ├── aether-cli/         # Rust USB + bridge
 ├── frontend/           # React dashboard
+├── mobile/             # Expo companion app
 ├── backend/            # FastAPI
 ├── download/           # Static installer landing page
 ├── marketing/
