@@ -3,7 +3,8 @@ import { ActionGrid, MTK_ACTIONS } from "../components/ActionGrid";
 import { DeviceInfoPanel } from "../components/DeviceInfoPanel";
 import { Console } from "../components/Console";
 import { useApp } from "../context/AppContext";
-import { Cpu, AlertTriangle, Usb, Loader2 } from "lucide-react";
+import { Cpu, AlertTriangle, Usb, Loader2, ShieldOff } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const SUPPORTED = [
   "MT6580", "MT6735", "MT6739", "MT6750", "MT6757", "MT6761", "MT6765",
@@ -31,7 +32,7 @@ export default function MTKService() {
         <div className="flex-1">
           <h1 className="text-xl font-bold tracking-tight">MTK Service Module</h1>
           <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-white/40 mt-1">
-            MediaTek BROM • Download Agent v6.2 • SP Flash protocol
+            MediaTek BROM • Download Agent v6.2 • Aegis Unlock included free
           </p>
         </div>
         <div className="text-right">
@@ -52,6 +53,27 @@ export default function MTKService() {
             {status === "searching" ? "Scanning…" : "Connect MTK"}
           </button>
         )}
+      </div>
+
+      {/* Aegis Unlock callout */}
+      <div
+        data-testid="mtk-aegis-banner"
+        className="bg-[#00FF41]/[0.04] border border-[#00FF41]/25 px-4 py-3 flex items-start gap-3 flex-shrink-0"
+      >
+        <ShieldOff className="w-4 h-4 text-[#00FF41] mt-0.5 flex-shrink-0" strokeWidth={2} />
+        <div className="flex-1 font-mono text-[11px] text-white/65 leading-relaxed">
+          <span className="text-[#00FF41] font-semibold">Aegis Unlock (Standard)</span>
+          {" "}— free on all paid plans. Clears the Android post-reset Google account guard
+          over <span className="text-white/80">BROM</span> without a full firmware reflash.
+          Put the phone in BROM (power off → hold Vol- → plug USB), then run{" "}
+          <span className="text-white/90">Aegis Unlock</span> in the grid below.{" "}
+          <Link
+            to="/docs/mtk-brom-frp-bypass"
+            className="text-[#00FF41] underline decoration-dotted hover:text-[#00CC33]"
+          >
+            Full guide
+          </Link>
+        </div>
       </div>
 
       {!matches && status === "connected" && (
