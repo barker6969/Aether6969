@@ -59,7 +59,7 @@ export function HomeScreen({ navigation }: Props) {
       {bridge.status !== "connected" && (
         <Pressable
           style={styles.warnBtn}
-          onPress={() => navigation.navigate("Settings" as never)}
+          onPress={() => navigation.getParent()?.navigate("Settings")}
         >
           <Text style={styles.warnText}>
             Bridge offline · Settings → PC IP + enable
