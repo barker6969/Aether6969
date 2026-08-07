@@ -3,6 +3,7 @@
 //! Subcommand layout:
 //!     aether-cli devices            list USB targets currently attached
 //!     aether-cli scan               watch for new device hot-plug events
+//!     aether-cli apple-detect       detect iPhone/iPad in DFU / Recovery (USB only)
 //!     aether-cli info <port>        read chipset / IMEI / serial from target
 //!     aether-cli bypass-frp <port>  (NOT IMPLEMENTED) MTK BROM / Qualcomm EDL FRP bypass
 //!     aether-cli repair-imei <port> --imei1 <i> [--imei2 <i>]  (NOT IMPLEMENTED)
@@ -53,6 +54,9 @@ enum Command {
     Devices,
     /// Continuously watch for device hot-plug events.
     Scan,
+    /// Detect an iPhone/iPad in DFU or Recovery over USB (detection only).
+    /// Does not unlock or remove passcodes. Points to Apple's official Restore (erase).
+    AppleDetect,
     /// Read chipset / IMEI / serial from the target.
     Info {
         /// USB port identifier (e.g. "COM5", "/dev/ttyUSB0", or "auto").
@@ -138,6 +142,7 @@ async fn main() -> anyhow::Result<()> {
     match cli.cmd {
         Command::Devices => usb::list_devices()?,
         Command::Scan => usb::watch_hotplug().await?,
+        Command::AppleDetect => usb::detect_apple()?,
         Command::Info { port } => exploits::info::read_device_info(&port).await?,
         Command::BypassFrp { port } => exploits::frp::bypass_frp(&port).await?,
         Command::RepairImei { port, imei1, imei2 } => {
