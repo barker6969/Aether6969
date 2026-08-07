@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { colors } from "../theme";
 import { PLATFORMS, type PlatformId } from "../data/services";
 import { useAppState } from "../context/AppState";
+import { useCliBridge } from "../context/CliBridgeContext";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 type Props = NativeStackScreenProps<
@@ -16,25 +17,38 @@ export function ServiceScreen({ route }: Props) {
     () => PLATFORMS.find((p) => p.id === platformId) ?? PLATFORMS[0],
     [platformId]
   );
-  const { runDemoAction } = useAppState();
+  const { runAction, activeAction } = useAppState();
+  const bridge = useCliBridge();
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
       <Text style={styles.kicker}>{platform.title.toUpperCase()} MODULE</Text>
       <Text style={styles.sub}>{platform.subtitle}</Text>
 
-      <View style={styles.banner}>
+      <View
+        style={[
+          styles.banner,
+          bridge.status === "connected" && styles.bannerLive,
+        ]}
+      >
         <Text style={styles.bannerText}>
-          USB operations require Aether desktop on the bench. Tapping an action
-          logs guidance in the Console tab.
+          Bridge: {bridge.status.toUpperCase()}
+          {bridge.status === "connected"
+            ? " · taps run live aether-cli jobs"
+            : " · enable in Settings (PC LAN IP + serve --addr 0.0.0.0:8765)"}
         </Text>
       </View>
 
       {platform.actions.map((a) => (
         <Pressable
           key={a.key}
-          style={[styles.card, a.danger && styles.dangerCard]}
-          onPress={() => runDemoAction(a.label, a.desktopOnly)}
+          style={[
+            styles.card,
+            a.danger && styles.dangerCard,
+            activeAction === a.label && styles.activeCard,
+          ]}
+          disabled={!!activeAction}
+          onPress={() => runAction(a.key, a.label, a.desktopOnly)}
         >
           <View style={styles.cardTop}>
             <Text style={styles.cardTitle}>{a.label}</Text>
@@ -48,8 +62,14 @@ export function ServiceScreen({ route }: Props) {
             </Text>
           </View>
           <Text style={styles.desc}>{a.desc}</Text>
-          {a.desktopOnly && (
-            <Text style={styles.deskTag}>DESKTOP + CLI</Text>
+          {activeAction === a.label ? (
+            <Text style={styles.deskTag}>RUNNING…</Text>
+          ) : (
+            a.desktopOnly && (
+              <Text style={styles.deskTag}>
+                {bridge.status === "connected" ? "LIVE VIA BRIDGE" : "NEEDS BRIDGE"}
+              </Text>
+            )
           )}
         </Pressable>
       ))}
@@ -70,10 +90,14 @@ const styles = StyleSheet.create({
   sub: { color: colors.muted, fontSize: 13, marginBottom: 14 },
   banner: {
     borderWidth: 1,
-    borderColor: colors.borderStrong,
-    backgroundColor: colors.greenDim,
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
     padding: 12,
     marginBottom: 14,
+  },
+  bannerLive: {
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.greenDim,
   },
   bannerText: { color: colors.muted, fontSize: 12, lineHeight: 18 },
   card: {
@@ -84,6 +108,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   dangerCard: { borderColor: "rgba(248,113,113,0.35)" },
+  activeCard: { borderColor: colors.borderStrong },
   cardTop: {
     flexDirection: "row",
     justifyContent: "space-between",
