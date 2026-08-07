@@ -4,6 +4,7 @@ import { NavigationContainer, DarkTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
+import { CliBridgeProvider } from "./src/context/CliBridgeContext";
 import { AppStateProvider } from "./src/context/AppState";
 import { colors } from "./src/theme";
 import { HomeScreen } from "./src/screens/HomeScreen";
@@ -80,60 +81,62 @@ function DocsStack() {
 
 export default function App() {
   return (
-    <AppStateProvider>
-      <NavigationContainer theme={navTheme}>
-        <StatusBar style="light" />
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            headerShown: false,
-            tabBarStyle: {
-              backgroundColor: colors.panel,
-              borderTopColor: colors.border,
-            },
-            tabBarActiveTintColor: colors.green,
-            tabBarInactiveTintColor: colors.muted,
-            tabBarLabelStyle: {
-              fontSize: 10,
-              letterSpacing: 1,
-              fontFamily: "monospace",
-            },
-            tabBarIcon: ({ color, size }) => {
-              const map: Record<string, keyof typeof Ionicons.glyphMap> = {
-                Home: "grid-outline",
-                Aegis: "shield-outline",
-                Console: "terminal-outline",
-                Docs: "book-outline",
-                Settings: "settings-outline",
-              };
-              return (
-                <Ionicons
-                  name={map[route.name] || "ellipse-outline"}
-                  size={size}
-                  color={color}
-                />
-              );
-            },
-          })}
-        >
-          <Tab.Screen name="Home" component={HomeStack} />
-          <Tab.Screen
-            name="Aegis"
-            component={AegisScreen}
-            options={{ headerShown: true, title: "AEGIS" }}
-          />
-          <Tab.Screen
-            name="Console"
-            component={LogsScreen}
-            options={{ headerShown: true, title: "CONSOLE" }}
-          />
-          <Tab.Screen name="Docs" component={DocsStack} />
-          <Tab.Screen
-            name="Settings"
-            component={SettingsScreen}
-            options={{ headerShown: true, title: "SETTINGS" }}
-          />
-        </Tab.Navigator>
-      </NavigationContainer>
-    </AppStateProvider>
+    <CliBridgeProvider>
+      <AppStateProvider>
+        <NavigationContainer theme={navTheme}>
+          <StatusBar style="light" />
+          <Tab.Navigator
+            screenOptions={({ route }) => ({
+              headerShown: false,
+              tabBarStyle: {
+                backgroundColor: colors.panel,
+                borderTopColor: colors.border,
+              },
+              tabBarActiveTintColor: colors.green,
+              tabBarInactiveTintColor: colors.muted,
+              tabBarLabelStyle: {
+                fontSize: 10,
+                letterSpacing: 1,
+                fontFamily: "monospace",
+              },
+              tabBarIcon: ({ color, size }) => {
+                const map: Record<string, keyof typeof Ionicons.glyphMap> = {
+                  Home: "grid-outline",
+                  Aegis: "shield-outline",
+                  Console: "terminal-outline",
+                  Docs: "book-outline",
+                  Settings: "settings-outline",
+                };
+                return (
+                  <Ionicons
+                    name={map[route.name] || "ellipse-outline"}
+                    size={size}
+                    color={color}
+                  />
+                );
+              },
+            })}
+          >
+            <Tab.Screen name="Home" component={HomeStack} />
+            <Tab.Screen
+              name="Aegis"
+              component={AegisScreen}
+              options={{ headerShown: true, title: "AEGIS" }}
+            />
+            <Tab.Screen
+              name="Console"
+              component={LogsScreen}
+              options={{ headerShown: true, title: "CONSOLE" }}
+            />
+            <Tab.Screen name="Docs" component={DocsStack} />
+            <Tab.Screen
+              name="Settings"
+              component={SettingsScreen}
+              options={{ headerShown: true, title: "SETTINGS" }}
+            />
+          </Tab.Navigator>
+        </NavigationContainer>
+      </AppStateProvider>
+    </CliBridgeProvider>
   );
 }
