@@ -31,14 +31,31 @@ Several repos held overlapping copies of the same product:
 - **Electron** build scripts (`BUILD-APP.bat`, `electron-build`, old `release.yml`) — superseded by Tauri + `desktop-release.yml`
 - Passcode-bypass / unofficial Apple unlock tooling — out of scope; official restore only
 
-## For other repos
+## Archive mirrors (automated)
 
-Add a short README pointer:
+Targets: `aether`, `aether-phones`, `Aether69`, `aether.exe` — **never** Aether6969.
 
-```markdown
-# Deprecated mirror
+### Option A — GitHub Actions (recommended)
 
-Use **https://github.com/barker6969/Aether6969** for all development and releases.
+1. Create a PAT with **Administration: Read and write** on those four repos  
+   (or classic PAT with `repo` scope for private + public).
+2. **Aether6969 → Settings → Secrets and variables → Actions**  
+   → New secret: `ARCHIVE_PAT` = your token.
+3. **Actions → “Archive mirror repositories” → Run workflow**  
+   → type `ARCHIVE` in the confirm field → Run.
+
+Workflow file: `.github/workflows/archive-mirrors.yml`
+
+### Option B — Local script
+
+```bash
+gh auth login   # once
+chmod +x scripts/archive-mirrors.sh
+./scripts/archive-mirrors.sh
 ```
 
-Optional later: archive `aether`, `Aether69`, and `aether.exe` on GitHub.
+Or without `gh`:
+
+```bash
+GITHUB_TOKEN=ghp_xxx ./scripts/archive-mirrors.sh
+```
