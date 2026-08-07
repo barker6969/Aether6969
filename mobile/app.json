@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Aether Repair",
+    "slug": "aether-repair",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#040405",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.aether.repair"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#040405"
+      },
+      "package": "dev.aether.repair"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "scheme": "aether",
+    "extra": {
+      "desktopReleases": "https://github.com/barker6969/Aether6969/releases/tag/desktop-v0.1.0",
+      "canonicalRepo": "https://github.com/barker6969/Aether6969"
+    }
+  }
+}
