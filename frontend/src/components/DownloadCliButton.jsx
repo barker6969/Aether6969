@@ -1,21 +1,22 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
-import { Download, Terminal, Check, Copy, ExternalLink } from "lucide-react";
-import { CLI_VERSION as VERSION, CLI_RELEASES_BASE as RELEASES_BASE } from "../lib/releases";
-
-// Download popover for the unified Rust binary CLI (aether-cli).
-// Points at the GitHub Releases artefacts produced by
-// .github/workflows/aether-cli-release.yml.
+import { Download, Terminal, Check, Copy, ExternalLink, Hash } from "lucide-react";
+import {
+  CLI_VERSION as VERSION,
+  CLI_RELEASES_BASE as RELEASES_BASE,
+  CLI_ASSETS,
+  CLI_SHA256,
+} from "../lib/releases";
 
 const PLATFORMS = [
-  { label: "macOS (arm64)", key: "darwin-arm64", file: `aether-cli-${VERSION}-aarch64-apple-darwin.tar.gz` },
-  { label: "macOS (x64)",   key: "darwin-x64",   file: `aether-cli-${VERSION}-x86_64-apple-darwin.tar.gz` },
-  { label: "Linux (x64)",   key: "linux-x64",    file: `aether-cli-${VERSION}-x86_64-unknown-linux-gnu.tar.gz` },
-  { label: "Windows (x64)", key: "windows-x64",  file: `aether-cli-${VERSION}-x86_64-pc-windows-msvc.zip` },
+  { label: "macOS (arm64)", key: "darwin-arm64", file: CLI_ASSETS["darwin-arm64"] },
+  { label: "macOS (x64)",   key: "darwin-x64",   file: CLI_ASSETS["darwin-x64"] },
+  { label: "Linux (x64)",   key: "linux-x64",    file: CLI_ASSETS["linux-x64"] },
+  { label: "Windows (x64)", key: "windows-x64",  file: CLI_ASSETS["windows-x64"] },
 ];
 
 const INSTALL_CMD =
-  `iwr ${RELEASES_BASE}/aether-cli-${VERSION}-x86_64-pc-windows-msvc.zip -OutFile aether-cli.zip; Expand-Archive aether-cli.zip`;
+  `iwr ${RELEASES_BASE}/${CLI_ASSETS["windows-x64"]} -OutFile aether-cli.zip; Expand-Archive aether-cli.zip -Force`;
 
 const CliTrigger = ({ variant, onClick }) =>
   variant === "primary" ? (
@@ -41,7 +42,7 @@ const CliTrigger = ({ variant, onClick }) =>
 const InstallCommand = ({ onCopy, copied }) => (
   <div>
     <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/40 mb-1.5">
-      One-line install
+      One-line install (Windows)
     </div>
     <div className="bg-black border border-white/10 px-3 py-2 flex items-center justify-between gap-2">
       <code className="font-mono text-[11px] text-[#00FF41] truncate">{INSTALL_CMD}</code>
@@ -78,7 +79,21 @@ const PlatformGrid = ({ onSelect }) => (
   </div>
 );
 
-const CliPopover = ({ onClose, onSelectPlatform, onCopyInstall, copied }) => (
+const ChecksumRow = ({ platformKey }) => {
+  const sha = CLI_SHA256[platformKey];
+  if (!sha) return null;
+
+  return (
+    <div className="flex items-start gap-1.5 mt-1.5">
+      <Hash className="w-3 h-3 text-white/30 mt-0.5 flex-shrink-0" />
+      <code className="font-mono text-[9px] text-white/40 break-all leading-relaxed">
+        SHA256 · {sha}
+      </code>
+    </div>
+  );
+};
+
+const CliPopover = ({ onClose, onSelectPlatform, onCopyInstall, copied, selectedKey }) => (
   <>
     <div className="fixed inset-0 z-40" onClick={onClose} />
     <div
@@ -98,9 +113,10 @@ const CliPopover = ({ onClose, onSelectPlatform, onCopyInstall, copied }) => (
       <div className="p-4 space-y-3">
         <InstallCommand onCopy={onCopyInstall} copied={copied} />
         <PlatformGrid onSelect={onSelectPlatform} />
+        {selectedKey && <ChecksumRow platformKey={selectedKey} />}
         <div className="font-mono text-[10px] text-white/40 leading-relaxed pt-1 border-t border-white/5">
           Single static binary · MTK BROM, Qualcomm Sahara/Firehose, Apple DFU,
-          Samsung KG — all in one drop.
+          Samsung KG — all in one drop. Run <code className="text-white/60">aether-cli serve</code> after extract.
         </div>
       </div>
     </div>
@@ -111,13 +127,15 @@ export const DownloadCliButton = ({ variant = "compact" }) => {
   const { pushLog } = useApp();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedKey, setSelectedKey] = useState(null);
 
   const handleDownload = (p) => {
     const url = `${RELEASES_BASE}/${p.file}`;
     pushLog("INFO", `Resolving aether-cli release · target = ${p.key} ...`);
     pushLog("SUCCESS", `Opening release: ${p.file}`);
+    setSelectedKey(p.key);
     window.open(url, "_blank", "noopener");
-    setOpen(false);
+    setTimeout(() => setOpen(false), 400);
   };
 
   const copyInstall = async () => {
@@ -141,6 +159,7 @@ export const DownloadCliButton = ({ variant = "compact" }) => {
           onSelectPlatform={handleDownload}
           onCopyInstall={copyInstall}
           copied={copied}
+          selectedKey={selectedKey}
         />
       )}
     </div>

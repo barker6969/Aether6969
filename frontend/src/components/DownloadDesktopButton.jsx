@@ -1,29 +1,30 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
-import { Download, Monitor, ExternalLink, Apple } from "lucide-react";
+import { Download, Monitor, ExternalLink, Apple, Hash } from "lucide-react";
 import {
   DESKTOP_VERSION as VERSION,
   DESKTOP_RELEASES_BASE as RELEASES_BASE,
   DESKTOP_ASSETS,
+  DESKTOP_SHA256,
 } from "../lib/releases";
 
 const BUILDS = [
   {
-    key: "windows-x64",
+    key: "windows",
     label: "Windows (x64)",
     sub: ".msi installer · ~2.3 MB",
     file: DESKTOP_ASSETS.windows,
     icon: Monitor,
   },
   {
-    key: "macos-universal",
+    key: "macos",
     label: "macOS (Universal)",
     sub: ".dmg · Intel + Apple Silicon · ~7 MB",
     file: DESKTOP_ASSETS.macos,
     icon: Apple,
   },
   {
-    key: "linux-x64",
+    key: "linux",
     label: "Linux (x64)",
     sub: ".AppImage · ~76 MB",
     file: DESKTOP_ASSETS.linux,
@@ -54,23 +55,35 @@ const DesktopTrigger = ({ variant, onClick }) =>
 
 const BuildRow = ({ build, onSelect }) => {
   const Icon = build.icon;
+  const sha = DESKTOP_SHA256[build.key];
+
   return (
-    <button
-      data-testid={`desktop-download-${build.key}`}
-      onClick={() => onSelect(build)}
-      className="w-full px-3 py-2 border border-white/10 hover:border-[#00FF41]/40 hover:bg-[#00FF41]/5 flex items-center justify-between gap-3 transition-colors group"
-    >
-      <div className="flex items-center gap-2.5 min-w-0">
-        <Icon className="w-3.5 h-3.5 text-white/60 group-hover:text-[#00FF41] flex-shrink-0" />
-        <div className="text-left min-w-0">
-          <div className="font-mono text-[11px] text-white group-hover:text-[#00FF41] tracking-wide truncate">
-            {build.label}
+    <div className="space-y-0.5">
+      <button
+        data-testid={`desktop-download-${build.key}`}
+        onClick={() => onSelect(build)}
+        className="w-full px-3 py-2 border border-white/10 hover:border-[#00FF41]/40 hover:bg-[#00FF41]/5 flex items-center justify-between gap-3 transition-colors group"
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Icon className="w-3.5 h-3.5 text-white/60 group-hover:text-[#00FF41] flex-shrink-0" />
+          <div className="text-left min-w-0">
+            <div className="font-mono text-[11px] text-white group-hover:text-[#00FF41] tracking-wide truncate">
+              {build.label}
+            </div>
+            <div className="font-mono text-[9px] text-white/40 truncate">{build.sub}</div>
           </div>
-          <div className="font-mono text-[9px] text-white/40 truncate">{build.sub}</div>
         </div>
-      </div>
-      <ExternalLink className="w-3 h-3 text-white/30 group-hover:text-[#00FF41] flex-shrink-0" />
-    </button>
+        <ExternalLink className="w-3 h-3 text-white/30 group-hover:text-[#00FF41] flex-shrink-0" />
+      </button>
+      {sha && (
+        <div className="flex items-start gap-1.5 px-1">
+          <Hash className="w-3 h-3 text-white/25 mt-0.5 flex-shrink-0" />
+          <code className="font-mono text-[9px] text-white/35 break-all leading-relaxed">
+            SHA256 · {sha}
+          </code>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -102,7 +115,7 @@ const DesktopPopover = ({ onClose, onSelect }) => (
           <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/40 mb-1.5">
             Pick your platform
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {BUILDS.map((b) => (
               <BuildRow key={b.key} build={b} onSelect={onSelect} />
             ))}
