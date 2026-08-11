@@ -3,8 +3,7 @@
 # Or via GitHub Action: .github/workflows/cloudflare-pages.yml
 
 name = "aether-repair-download"
-compatibility_date = "2026-08-01"
+compatibility_date = "2025-08-01"
 
-[assets]
-directory = "./download"
-not_found_handling = "single-page-application"
+# Pages output directory (CLI still passes the path; this documents intent)
+pages_build_output_dir = "download"

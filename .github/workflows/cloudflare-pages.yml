@@ -16,7 +16,8 @@ jobs:
       contents: read
       deployments: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
