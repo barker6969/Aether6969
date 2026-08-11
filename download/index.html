@@ -3,88 +3,283 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aether Repair Tool — Download</title>
-  <meta name="description" content="Download the official Aether Repair Tool desktop installer for Windows, macOS, and Linux." />
+  <title>Aether Repair Tool — Official Downloads</title>
+  <meta name="description" content="Download the official Aether Repair Tool desktop app and aether-cli USB bridge for Windows, macOS, and Linux." />
+  <meta name="theme-color" content="#0a0a0c" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2300ff41'/><text x='50' y='68' font-size='58' font-weight='700' text-anchor='middle' fill='%23000'>A</text></svg>" />
   <style>
     :root {
-      --bg: #0a0a0c; --card: #121218; --border: #1e1e28;
-      --text: #e8e8ed; --muted: #8b8b9a; --accent: #818cf8; --green: #00ff41;
+      --bg: #07070a;
+      --card: #111116;
+      --border: #1c1c26;
+      --text: #f0f0f5;
+      --muted: #8b8b9e;
+      --accent: #818cf8;
+      --green: #00ff41;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg); color: var(--text); min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 2rem 1rem;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.25rem 4rem;
       background-image:
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.18), transparent),
-        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(0, 255, 65, 0.05), transparent);
+        radial-gradient(ellipse 90% 50% at 50% -20%, rgba(99, 102, 241, 0.20), transparent),
+        radial-gradient(ellipse 50% 35% at 100% 100%, rgba(0, 255, 65, 0.05), transparent);
     }
     .card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-      padding: 2.5rem 2rem; max-width: 520px; width: 100%;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem 2.25rem;
+      max-width: 560px;
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.55);
+      margin-bottom: 1.5rem;
     }
     .logo {
       width: 56px; height: 56px;
-      background: linear-gradient(135deg, #00ff41, #6366f1);
-      border-radius: 14px; display: flex; align-items: center; justify-content: center;
-      font-size: 1.6rem; font-weight: 700; color: #000; margin-bottom: 1.25rem;
+      background: linear-gradient(135deg, #00ff41 0%, #6366f1 100%);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.65rem; font-weight: 800; color: #000;
+      margin-bottom: 1.25rem;
     }
-    h1 { font-size: 1.5rem; font-weight: 650; letter-spacing: -0.02em; margin-bottom: 0.35rem; }
-    .version { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
-    p { color: var(--muted); font-size: 0.95rem; line-height: 1.55; margin-bottom: 1.5rem; }
-    .downloads { display: flex; flex-direction: column; gap: 0.75rem; }
+    h1 {
+      font-size: 1.55rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.25rem;
+    }
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .version, .section-desc {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
+    }
+    .badge {
+      background: rgba(0, 255, 65, 0.12);
+      color: var(--green);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.18rem 0.48rem;
+      border-radius: 999px;
+    }
+    .badge.soon {
+      background: rgba(129, 140, 248, 0.15);
+      color: var(--accent);
+    }
+    p { color: var(--muted); font-size: 0.95rem; line-height: 1.55; margin-bottom: 1.4rem; }
+    .downloads { display: flex; flex-direction: column; gap: 0.65rem; }
     .btn {
-      display: flex; align-items: center; justify-content: space-between; width: 100%;
-      background: #00ff41; color: #000; text-decoration: none; font-weight: 600;
-      font-size: 0.95rem; padding: 0.85rem 1.15rem; border-radius: 10px;
-      transition: filter 0.15s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: var(--green);
+      color: #000;
+      text-decoration: none;
+      font-weight: 650;
+      font-size: 0.95rem;
+      padding: 0.9rem 1.2rem;
+      border-radius: 12px;
+      transition: filter 0.15s, transform 0.12s;
     }
-    .btn:hover { filter: brightness(1.08); }
-    .btn:active { transform: scale(0.98); }
+    .btn:hover { filter: brightness(1.07); }
+    .btn:active { transform: scale(0.985); }
     .btn.secondary {
-      background: transparent; border: 1px solid var(--border); color: var(--text);
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
     }
-    .btn.secondary:hover { background: rgba(255,255,255,0.04); border-color: #2a2a38; filter: none; }
-    .btn span.size { font-size: 0.8rem; opacity: 0.85; font-weight: 500; }
-    .meta { margin-top: 1.25rem; font-size: 0.8rem; color: var(--muted); line-height: 1.45; }
+    .btn.secondary:hover {
+      background: rgba(255,255,255,0.035);
+      border-color: #2e2e3c;
+      filter: none;
+    }
+    .btn .left { display: flex; align-items: center; gap: 0.65rem; }
+    .btn .icon { width: 20px; height: 20px; opacity: 0.9; flex-shrink: 0; }
+    .btn .size { font-size: 0.78rem; opacity: 0.8; font-weight: 500; white-space: nowrap; }
+    .meta {
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
     .status {
-      margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border);
-      font-size: 0.85rem; color: var(--muted); line-height: 1.5;
+      margin-top: 1.4rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem 1.1rem;
     }
     .status a { color: var(--accent); text-decoration: none; }
     .status a:hover { text-decoration: underline; }
-    footer { margin-top: 2rem; font-size: 0.8rem; color: var(--muted); }
-    footer a { color: inherit; }
+    footer {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    footer a { color: inherit; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .note {
+      background: rgba(129, 140, 248, 0.08);
+      border: 1px solid rgba(129, 140, 248, 0.18);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 1rem;
+    }
+    .note code {
+      background: rgba(255,255,255,0.06);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    @media (max-width: 480px) {
+      .card { padding: 1.85rem 1.35rem; }
+      h1 { font-size: 1.35rem; }
+    }
   </style>
 </head>
 <body>
+
+  <!-- ========== DESKTOP APP ========== -->
   <div class="card">
     <div class="logo">A</div>
     <h1>Aether Repair Tool</h1>
-    <div class="version">v0.1.0 · Native desktop builds</div>
+    <div class="version">
+      Desktop App · v0.1.0
+      <span class="badge">Latest</span>
+    </div>
     <p>
-      Official installers for the Aether repair console. Native window, local CLI bridge,
-      no browser required.
+      Native desktop application (Tauri). Includes the full dashboard in its own window
+      and works offline with the local CLI bridge.
     </p>
+
     <div class="downloads">
       <a class="btn" href="https://github.com/barker6969/Aether6969/releases/download/desktop-v0.1.0/Aether.Repair.Tool_0.1.0_x64_en-US.msi">
-        <span>Windows MSI</span><span class="size">2.3 MB · x64</span>
+        <span class="left">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.5 4.25V11.5H3V5.5ZM3 12.5H10.5V19.75L3 18.5V12.5ZM11.5 4.05L21 2.5V11.5H11.5V4.05ZM11.5 12.5H21V21.5L11.5 19.95V12.5Z"/></svg>
+          Windows MSI
+        </span>
+        <span class="size">~2.3 MB · x64</span>
       </a>
+
       <a class="btn secondary" href="https://github.com/barker6969/Aether6969/releases/download/desktop-v0.1.0/Aether.Repair.Tool_0.1.0_universal.dmg">
-        <span>macOS DMG</span><span class="size">7 MB · Universal</span>
+        <span class="left">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 16.9 2.93 12.27 4.7 9.14C5.57 7.59 7.13 6.64 8.82 6.61C10.1 6.59 11.32 7.48 12.11 7.48C12.89 7.48 14.37 6.4 15.92 6.57C16.57 6.6 18.39 6.85 19.56 8.57C19.47 8.63 17.39 9.87 17.41 12.42C17.44 15.42 20.06 16.42 20.09 16.43C20.06 16.5 19.67 17.84 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/></svg>
+          macOS DMG
+        </span>
+        <span class="size">~7 MB · Universal</span>
       </a>
+
       <a class="btn secondary" href="https://github.com/barker6969/Aether6969/releases/download/desktop-v0.1.0/Aether.Repair.Tool_0.1.0_amd64.AppImage">
-        <span>Linux AppImage</span><span class="size">76 MB · x64</span>
+        <span class="left">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 2C10.5 2 9.25 3.5 9.25 5.25C9.25 6.15 9.6 7 10.2 7.65L8.5 10.5C7.2 10.1 5.8 10.35 4.75 11.2C3.35 12.35 3 14.35 3.9 15.9L5.5 18.5C6.4 20 8.1 20.85 9.85 20.5L12.5 22L15.15 20.5C16.9 20.85 18.6 20 19.5 18.5L21.1 15.9C22 14.35 21.65 12.35 20.25 11.2C19.2 10.35 17.8 10.1 16.5 10.5L14.8 7.65C15.4 7 15.75 6.15 15.75 5.25C15.75 3.5 14.5 2 12.5 2Z"/></svg>
+          Linux AppImage
+        </span>
+        <span class="size">~76 MB · x64</span>
       </a>
     </div>
-    <div class="meta">Live from GitHub Releases · unsigned builds may show SmartScreen / Gatekeeper.</div>
-    <div class="status">
-      <a href="https://github.com/barker6969/Aether6969/releases/tag/desktop-v0.1.0">Release page</a> ·
-      <a href="https://github.com/barker6969/Aether6969">Source</a>
+
+    <div class="meta">
+      Unsigned builds may trigger SmartScreen / Gatekeeper. Prefer the official GitHub Release assets.
     </div>
   </div>
-  <footer>© 2026 Aether Labs</footer>
+
+  <!-- ========== CLI ========== -->
+  <div class="card">
+    <h2>
+      aether-cli
+      <span class="badge soon">USB Bridge</span>
+    </h2>
+    <div class="section-desc">
+      Standalone Rust binary that talks to USB devices (MTK / Qualcomm / Apple DFU / Samsung)
+      and exposes a local WebSocket bridge for the dashboard.
+    </div>
+
+    <div class="downloads">
+      <a class="btn secondary" href="https://github.com/barker6969/Aether6969/releases/latest/download/aether-cli-x86_64-pc-windows-msvc.zip">
+        <span class="left">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.5 4.25V11.5H3V5.5ZM3 12.5H10.5V19.75L3 18.5V12.5ZM11.5 4.05L21 2.5V11.5H11.5V4.05ZM11.5 12.5H21V21.5L11.5 19.95V12.5Z"/></svg>
+          Windows
+        </span>
+        <span class="size">x64 · .zip</span>
+      </a>
+
+      <a class="btn secondary" href="https://github.com/barker6969/Aether6969/releases/latest/download/aether-cli-x86_64-apple-darwin.tar.gz">
+        <span class="left">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 16.9 2.93 12.27 4.7 9.14C5.57 7.59 7.13 6.64 8.82 6.61C10.1 6.59 11.32 7.48 12.11 7.48C12.89 7.48 14.37 6.4 15.92 6.57C16.57 6.6 18.39 6.85 19.56 8.57C19.47 8.63 17.39 9.87 17.41 12.42C17.44 15.42 20.06 16.42 20.09 16.43C20.06 16.5 19.67 17.84 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/></svg>
+          macOS (Intel)
+        </span>
+        <span class="size">x64 · .tar.gz</span>
+      </a>
+
+      <a class="btn secondary" href="https://github.com/barker6969/Aether6969/releases/latest/download/aether-cli-aarch64-apple-darwin.tar.gz">
+        <span class="left">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 16.9 2.93 12.27 4.7 9.14C5.57 7.59 7.13 6.64 8.82 6.61C10.1 6.59 11.32 7.48 12.11 7.48C12.89 7.48 14.37 6.4 15.92 6.57C16.57 6.6 18.39 6.85 19.56 8.57C19.47 8.63 17.39 9.87 17.41 12.42C17.44 15.42 20.06 16.42 20.09 16.43C20.06 16.5 19.67 17.84 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/></svg>
+          macOS (Apple Silicon)
+        </span>
+        <span class="size">arm64 · .tar.gz</span>
+      </a>
+
+      <a class="btn secondary" href="https://github.com/barker6969/Aether6969/releases/latest/download/aether-cli-x86_64-unknown-linux-gnu.tar.gz">
+        <span class="left">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 2C10.5 2 9.25 3.5 9.25 5.25C9.25 6.15 9.6 7 10.2 7.65L8.5 10.5C7.2 10.1 5.8 10.35 4.75 11.2C3.35 12.35 3 14.35 3.9 15.9L5.5 18.5C6.4 20 8.1 20.85 9.85 20.5L12.5 22L15.15 20.5C16.9 20.85 18.6 20 19.5 18.5L21.1 15.9C22 14.35 21.65 12.35 20.25 11.2C19.2 10.35 17.8 10.1 16.5 10.5L14.8 7.65C15.4 7 15.75 6.15 15.75 5.25C15.75 3.5 14.5 2 12.5 2Z"/></svg>
+          Linux
+        </span>
+        <span class="size">x64 · .tar.gz</span>
+      </a>
+    </div>
+
+    <div class="note">
+      <strong>Note:</strong> Pre-built CLI binaries are published when a <code>v*</code> tag is created
+      (see <code>.github/workflows/aether-cli-release.yml</code>).
+      Until then you can build from source:
+      <br><br>
+      <code>cd aether-cli &amp;&amp; cargo build --release</code>
+    </div>
+
+    <div class="meta" style="margin-top: 1.1rem;">
+      After download: extract → run <code>aether-cli serve</code> (or <code>aether-cli.exe serve</code> on Windows).
+      The dashboard connects to <code>ws://127.0.0.1:8765</code>.
+    </div>
+  </div>
+
+  <!-- Footer links -->
+  <div class="card" style="padding: 1.4rem 2rem;">
+    <div class="status" style="margin: 0; padding: 0; border: none;">
+      <a href="https://github.com/barker6969/Aether6969/releases/tag/desktop-v0.1.0">Desktop release notes</a>
+      <a href="https://github.com/barker6969/Aether6969/releases">All releases</a>
+      <a href="https://github.com/barker6969/Aether6969">Source code</a>
+      <a href="https://github.com/barker6969/Aether6969/tree/main/aether-cli">CLI docs</a>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 Aether Labs ·
+    <a href="https://github.com/barker6969/Aether6969">GitHub</a>
+  </footer>
+
 </body>
 </html>
