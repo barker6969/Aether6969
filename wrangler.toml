@@ -1,0 +1,10 @@
+# Cloudflare Pages — static download site (download/)
+# Deploy: npx wrangler pages deploy download --project-name=aether-repair-download
+# Or via GitHub Action: .github/workflows/cloudflare-pages.yml
+
+name = "aether-repair-download"
+compatibility_date = "2026-08-01"
+
+[assets]
+directory = "./download"
+not_found_handling = "single-page-application"
