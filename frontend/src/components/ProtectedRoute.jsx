@@ -3,9 +3,14 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, noAuth } = useAuth();
   const location = useLocation();
   const redirectState = useMemo(() => ({ from: location }), [location]);
+
+  // Personal / local mode: never force login
+  if (noAuth) {
+    return children;
+  }
 
   if (loading || user === null) {
     return (
