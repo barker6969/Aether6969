@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "identifier": "dev.aether.repair",
   "build": {
-    "beforeDevCommand": "node ../scripts/prepare-cli-sidecar.js",
-    "beforeBuildCommand": "node ../scripts/prepare-cli-sidecar.js",
+    "beforeDevCommand": "node ./scripts/prepare-cli-sidecar.js",
+    "beforeBuildCommand": "node ./scripts/prepare-cli-sidecar.js",
     "devUrl": "https://mtk-qualcomm-tool.emergent.host",
     "frontendDist": "../public"
   },
