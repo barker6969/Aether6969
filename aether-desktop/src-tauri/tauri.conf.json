@@ -58,6 +58,9 @@
       "binaries/aether-cli"
     ],
     "windows": {
+      "certificateThumbprint": "8F4460787A70F71395CF9CE45C9CFADE3BC8A6C3",
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com",
       "wix": {
         "language": ["en-US"],
         "upgradeCode": "12345678-1234-1234-1234-1234567890AB"

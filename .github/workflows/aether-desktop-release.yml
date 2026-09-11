@@ -77,6 +77,17 @@ jobs:
         run: node scripts/prepare-cli-sidecar.js
         working-directory: aether-desktop
 
+      - name: Import Windows signing certificate
+        if: matrix.platform == 'windows-latest'
+        shell: powershell
+        run: |
+          $pfxPath = Join-Path $env:RUNNER_TEMP 'aether-codesign.pfx'
+          [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String('${{ secrets.WINDOWS_CERTIFICATE }}'))
+          Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My `
+            -Password (ConvertTo-SecureString '${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}' -AsPlainText -Force)
+
+      # Official Tauri action — handles `tauri build`, icon detection,
+      # bundle generation, artefact upload, and draft release creation.
       - name: Build & release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -87,6 +98,11 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # ── Windows Authenticode ────────────────────────────────────────────
+          # Imported into the runner cert store before build so Tauri can use the
+          # matching thumbprint from tauri.conf.json.
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
