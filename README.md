@@ -6,6 +6,48 @@
 
 ---
 
+## Start in 30 seconds
+
+### End users — install desktop
+
+| Platform | Link |
+|----------|------|
+| **Windows MSI** | [Download](https://github.com/barker6969/Aether6969/releases/download/desktop-v0.1.0/Aether.Repair.Tool_0.1.0_x64_en-US.msi) |
+| **macOS DMG** | [Download](https://github.com/barker6969/Aether6969/releases/download/desktop-v0.1.0/Aether.Repair.Tool_0.1.0_universal.dmg) |
+| **Linux AppImage** | [Download](https://github.com/barker6969/Aether6969/releases/download/desktop-v0.1.0/Aether.Repair.Tool_0.1.0_amd64.AppImage) |
+
+### Developers — one command
+
+```powershell
+# Windows
+git clone https://github.com/barker6969/Aether6969.git
+cd Aether6969
+.\start.ps1
+```
+
+```bash
+# macOS / Linux
+git clone https://github.com/barker6969/Aether6969.git
+cd Aether6969
+chmod +x start.sh && ./start.sh
+```
+
+→ **http://localhost:3000** (guest mode, no login)
+
+USB bridge in the same go:
+
+```powershell
+.\start.ps1 -Bridge
+```
+
+```bash
+./start.sh --bridge
+```
+
+Full local notes: **[LOCAL-LAUNCH.md](./LOCAL-LAUNCH.md)**
+
+---
+
 ## What’s included
 
 | Component | Path | Status |
@@ -21,23 +63,11 @@
 
 ---
 
-## Quick start
-
-### Download desktop (end users)
-
-| Platform | Link |
-|----------|------|
-| **Windows MSI** | [Aether.Repair.Tool_0.1.0_x64_en-US.msi](https://github.com/barker6969/Aether6969/releases/download/desktop-v0.1.0/Aether.Repair.Tool_0.1.0_x64_en-US.msi) |
-| **macOS DMG** | [Aether.Repair.Tool_0.1.0_universal.dmg](https://github.com/barker6969/Aether6969/releases/download/desktop-v0.1.0/Aether.Repair.Tool_0.1.0_universal.dmg) |
-| **Linux AppImage** | [Aether.Repair.Tool_0.1.0_amd64.AppImage](https://github.com/barker6969/Aether6969/releases/download/desktop-v0.1.0/Aether.Repair.Tool_0.1.0_amd64.AppImage) |
-
-Release page: https://github.com/barker6969/Aether6969/releases/tag/desktop-v0.1.0
-
-### Develop
+## Develop (manual)
 
 ```bash
-# Frontend
-cd frontend && npm install && npm start
+# Frontend only
+cd frontend && cp .env.example .env && npm install && npm start
 
 # Mobile companion (Expo)
 cd mobile && npm install && npm start
@@ -50,10 +80,10 @@ python -m uvicorn server:app --reload --port 8001
 # CLI (USB)
 cd aether-cli && cargo build --release
 ./target/release/aether-cli devices
-./target/release/aether-cli apple-detect   # iPhone DFU / Recovery USB only
-./target/release/aether-cli serve          # ws://127.0.0.1:8765 for dashboard
+./target/release/aether-cli apple-detect
+./target/release/aether-cli serve          # ws://127.0.0.1:8765
 
-# Docker (API + frontend stack)
+# Docker (API + frontend)
 docker compose up --pull always
 ```
 
@@ -62,18 +92,6 @@ docker compose up --pull always
 ```text
 Actions → “Aether Desktop · Cross-platform release” → Run workflow
 ```
-
-Or tag and use the workflow inputs for `desktop-vX.Y.Z`.
-
----
-
-## Mobile companion
-
-Path: `mobile/` — Expo app with Home, Aegis Unlock hub, Console, Docs, Settings.
-
-**USB repair stays on desktop.** Phone UI is catalog + guidance + links to MSI/DMG.
-
-See [mobile/README.md](./mobile/README.md).
 
 ---
 
@@ -91,23 +109,13 @@ Apple path is **detection + official erase/restore only**. No passcode bypass.
 
 ---
 
-## Repo map (why this one)
-
-| Former repo | What we kept here |
-|-------------|-------------------|
-| **Aether6969** | Tauri desktop CI, live MSI/DMG/AppImage, `apple-detect`, download page, marketing, mobile |
-| **aether** | Dev/Docker docs pattern, deploy checklists (adapted; Electron builds superseded by Tauri) |
-| **aether-phones** | Backend deps cleaned for Vercel (no private PyPI package) |
-| **Aether69 / aether.exe** | Older mirrors — do not develop there |
-
-See [CANONICAL.md](./CANONICAL.md) for the full consolidation note.
-
----
-
 ## Structure
 
 ```text
 Aether6969/
+├── start.ps1           # Windows one-command start
+├── start.sh            # macOS/Linux one-command start
+├── LOCAL-LAUNCH.md     # Full local guide
 ├── aether-desktop/     # Tauri 2 wrapper
 ├── aether-cli/         # Rust USB + bridge
 ├── frontend/           # React dashboard
@@ -115,7 +123,7 @@ Aether6969/
 ├── backend/            # FastAPI
 ├── download/           # Static installer landing page
 ├── marketing/
-├── .github/workflows/  # desktop-release, cli-release, pages
+├── .github/workflows/
 ├── docker-compose.yml
 ├── SIGNING.md
 └── CANONICAL.md
