@@ -1,7 +1,7 @@
 {
   "name": "aether-desktop",
   "version": "0.1.0",
-  "description": "Aether Repair Tool — native Windows / macOS / Linux desktop wrapper with bundled CLI bridge.",
+  "description": "Aether Repair Tool — native desktop wrapper with bundled CLI bridge.",
   "private": true,
   "scripts": {
     "prepare:cli": "node scripts/prepare-cli-sidecar.js",
@@ -13,7 +13,7 @@
     "build:appimage": "node scripts/prepare-cli-sidecar.js && tauri build --bundles appimage"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.1.0"
+    "@tauri-apps/cli": "^2.9.5"
   },
   "engines": {
     "node": ">=18"
