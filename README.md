@@ -22,7 +22,7 @@
 # Windows
 git clone https://github.com/barker6969/Aether6969.git
 cd Aether6969
-.\start.ps1
+.\\start.ps1
 ```
 
 ```bash
@@ -37,7 +37,7 @@ chmod +x start.sh && ./start.sh
 USB bridge in the same go:
 
 ```powershell
-.\start.ps1 -Bridge
+.\\start.ps1 -Bridge
 ```
 
 ```bash
@@ -60,6 +60,8 @@ Full local notes: **[LOCAL-LAUNCH.md](./LOCAL-LAUNCH.md)**
 | **Public download page** | `download/` | Static page for installers |
 | **Marketing** | `marketing/` | Landing / copy assets |
 | **CI releases** | `.github/workflows/` | `desktop-release.yml`, CLI release, Pages |
+| **MapleRoot** (on-device root) | `mapleroot/` | APK + LKM chain |
+| **MapleHost** (PC companion) | `maplehost/` | Build / deploy / offsets / reports |
 
 ---
 
@@ -82,6 +84,11 @@ cd aether-cli && cargo build --release
 ./target/release/aether-cli devices
 ./target/release/aether-cli apple-detect
 ./target/release/aether-cli serve          # ws://127.0.0.1:8765
+
+# MapleHost (APK build/deploy)
+cd maplehost && python -m pip install -e .
+maplehost status
+maplehost build-payloads android13-5.15
 
 # Docker (API + frontend)
 docker compose up --pull always
@@ -123,6 +130,8 @@ Aether6969/
 ├── backend/            # FastAPI
 ├── download/           # Static installer landing page
 ├── marketing/
+├── mapleroot/          # On-device temporary root APK
+├── maplehost/          # PC build/deploy CLI
 ├── .github/workflows/
 ├── docker-compose.yml
 ├── SIGNING.md
