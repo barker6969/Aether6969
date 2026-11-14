@@ -1,0 +1,23 @@
+[project]
+name = "maplehost"
+version = "0.1.0"
+description = "Host-side companion for MapleRoot — build, deploy, offsets, reports"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-2.0-only" }
+authors = [{ name = "Aether Labs" }]
+dependencies = []
+
+[project.optional-dependencies]
+gui = ["PySide6>=6.6"]
+
+[project.scripts]
+maplehost = "maplehost.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["maplehost*"]
